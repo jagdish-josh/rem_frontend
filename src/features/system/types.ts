@@ -27,6 +27,7 @@ export interface UpdateOrgDTO {
     }
 }
 
+
 export interface CreateOrgAdminDTO {
     user: {
         organization_id: number;
@@ -35,4 +36,22 @@ export interface CreateOrgAdminDTO {
         password: string;
         phone?: string;
     }
+}
+
+export interface UpdateOrgAdminDTO {
+    id: number;
+    user: {
+        full_name?: string;
+        phone?: string;
+    }
+}
+
+export interface OrgAdmin {
+    id: number;
+    full_name: string;
+    email: string;
+    phone?: string;
+    status?: string;
+    role?: string;
+    organization_id?: number;
 }

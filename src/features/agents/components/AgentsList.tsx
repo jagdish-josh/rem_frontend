@@ -83,7 +83,7 @@ export default function AgentsList() {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                                            {agent.role.replace('_', ' ').toLowerCase()}
+                                            {agent.role ? agent.role.replace('_', ' ').toLowerCase() : 'Unknown'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">

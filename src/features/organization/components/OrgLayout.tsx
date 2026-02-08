@@ -1,4 +1,4 @@
-import { Outlet, Navigate, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { authService } from '../../auth/api/authService';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,7 @@ export default function OrgLayout() {
     });
 
     const location = useLocation();
+    const navigate = useNavigate();
 
     if (isLoading) {
         return <div className="h-screen w-full flex items-center justify-center">Loading...</div>;
@@ -31,7 +32,7 @@ export default function OrgLayout() {
 
     const handleLogout = async () => {
         await authService.logout();
-        window.location.reload(); // Simple reload to clear state/redirect
+        navigate('/login', { replace: true });
     };
 
     const navigation = [

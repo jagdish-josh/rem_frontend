@@ -30,6 +30,10 @@ export default function LoginPage() {
     const loginMutation = useMutation({
         mutationFn: (data: LoginForm) => authService.login(data, isSystemAdmin),
         onSuccess: (data) => {
+            if (!data.token) {
+                console.error('Login successful but no token received', data);
+                throw new Error('Login successful but no token received');
+            }
             localStorage.setItem('token', data.token);
             localStorage.setItem('user_data', JSON.stringify(data.user));
 

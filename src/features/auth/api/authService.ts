@@ -7,6 +7,7 @@ export const authService = {
         const response = await api.post(endpoint, credentials);
 
         const data = response.data;
+        console.log('Login response:', data); // Debug logging
 
         // Normalize response
         if (isSystemAdmin) {
@@ -41,11 +42,14 @@ export const authService = {
 
     logout: async (): Promise<void> => {
         localStorage.removeItem('token');
+        localStorage.removeItem('user_data');
         // Optional: Call backend logout if it exists
     },
 
     getUser: async (): Promise<User | null> => {
+        const token = localStorage.getItem('token');
         const savedUser = localStorage.getItem('user_data');
-        return savedUser ? JSON.parse(savedUser) : null;
+        if (!token || !savedUser) return null;
+        return JSON.parse(savedUser);
     }
 };

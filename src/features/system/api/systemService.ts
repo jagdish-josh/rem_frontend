@@ -27,13 +27,13 @@ export const systemService = {
     },
 
     updateOrgAdmin: async (data: UpdateOrgAdminDTO): Promise<any> => {
-        const response = await api.patch(`/admin/org_admin`, data);
+        const response = await api.patch('/admin/org_admins', data);
         return response.data;
     },
 
     createOrgAdmin: async (data: CreateOrgAdminDTO): Promise<any> => {
         // Endpoint based on Admin::OrgAdminsController
-        const response = await api.post('/admin/org_admin', data);
+        const response = await api.post('/admin/org_admins', data);
         return response.data;
     }
 };

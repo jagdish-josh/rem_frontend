@@ -7,6 +7,7 @@ import AgentsPage from './features/agents/pages/AgentsPage'
 import CampaignsPage from './features/campaigns/pages/CampaignsPage'
 import SystemLayout from './features/system/components/SystemLayout'
 import SystemDashboardPage from './features/system/pages/SystemDashboardPage'
+import NotFoundPage from './components/NotFoundPage'
 
 function App() {
   return (
@@ -23,14 +24,17 @@ function App() {
           <Route path="contacts" element={<div>Contacts Page</div>} />
           <Route path="campaigns" element={<CampaignsPage />} />
           <Route path="settings" element={<div>Settings Page</div>} />
-          <Route path="*" element={<Navigate to="dashboard" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
 
         {/* Protected Routes for System Admins */}
         <Route path="/admin" element={<SystemLayout />}>
           <Route path="organizations" element={<SystemDashboardPage />} />
-          <Route path="*" element={<Navigate to="organizations" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
+
+        {/* Fallback for any other URL */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   )
