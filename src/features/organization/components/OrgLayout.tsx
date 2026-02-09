@@ -3,11 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { authService } from '../../auth/api/authService';
 import { cn } from '@/lib/utils';
 import {
-    Building2,
     Users,
     Contact,
     Megaphone,
-    Settings,
     LogOut,
     LayoutDashboard
 } from 'lucide-react';
@@ -36,32 +34,47 @@ export default function OrgLayout() {
     };
 
     const navigation = [
-        { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
-        { name: 'Agents', href: '/app/agents', icon: Users },
-        { name: 'Contacts', href: '/app/contacts', icon: Contact },
-        { name: 'Campaigns', href: '/app/campaigns', icon: Megaphone },
-        { name: 'Organization', href: '/app/organization', icon: Building2 },
-        { name: 'Settings', href: '/app/settings', icon: Settings },
+        { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard, allowedRoles: ['ORG_ADMIN', 'ORG_USER'] },
+        { name: 'Agents', href: '/app/agents', icon: Users, allowedRoles: ['ORG_ADMIN'] },
+        { name: 'Contacts', href: '/app/contacts', icon: Contact, allowedRoles: ['ORG_ADMIN', 'ORG_USER'] },
+        { name: 'Campaigns', href: '/app/campaigns', icon: Megaphone, allowedRoles: ['ORG_ADMIN', 'ORG_USER'] },
     ];
+
+    // Filter navigation based on user role
+    const filteredNavigation = navigation.filter(item =>
+        item.allowedRoles.includes(user.role)
+    );
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
             {/* Sidebar */}
             <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
                 <div className="h-16 flex items-center px-6 border-b border-gray-200">
-                    <Building2 className="h-8 w-8 text-blue-600 mr-2" />
+                    <LayoutDashboard className="h-8 w-8 text-blue-600 mr-2" />
                     <span className="text-xl font-bold text-gray-800">RealEstateAd</span>
                 </div>
 
                 <div className="p-4 border-b border-gray-100 mb-2">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Organization</p>
-                    <div className="flex items-center space-x-3 bg-gray-50 p-2 rounded-lg">
-                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
-                            {user.orgId.charAt(0).toUpperCase()}
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Admin Details</p>
+                    <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                        <div className="flex items-center space-x-3">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
+                                {user.fullName?.charAt(0).toUpperCase() || user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 truncate">{user.fullName || user.name}</p>
+                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-900 line-clamp-1">{user.orgId}</p>
-                            <p className="text-xs text-gray-500 capitalize">{user.role.replace('_', ' ').toLowerCase()}</p>
+                        <div className="pt-2 border-t border-gray-200 space-y-1">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Organization:</span>
+                                <span className="text-xs font-medium text-gray-900 truncate ml-2">{user.organizationName || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Role:</span>
+                                <span className="text-xs font-medium text-blue-600 capitalize">{user.role.replace('_', ' ').toLowerCase()}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

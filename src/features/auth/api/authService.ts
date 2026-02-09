@@ -25,16 +25,17 @@ export const authService = {
             };
         } else {
             // Normal User response structure
-            // Backend returns { token, user: { id, full_name, email, role, organization_id } }
+            // Backend returns { token, user: { id, full_name, email, role, organization_id, organization_name } }
             return {
                 token: data.token,
                 user: {
-                    ...data.user,
-                    // Backend returns 'Office Admin' or 'User'. Map to frontend types if needed.
-                    // Assuming backend sends role name directly, otherwise map it.
-                    // Frontend helper:
-                    role: data.user.role === 'Office Admin' ? 'ORG_ADMIN' : 'ORG_USER',
-                    orgId: data.user.organization_id.toString()
+                    id: data.user.id.toString(),
+                    name: data.user.full_name,
+                    fullName: data.user.full_name,
+                    email: data.user.email,
+                    role: data.user.role,
+                    orgId: data.user.organization_id.toString(),
+                    organizationName: data.user.organization_name
                 }
             };
         }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { systemService } from '../api/systemService';
-import { Plus, Building2, UserPlus, Loader2, Pencil } from 'lucide-react';
+import { Plus, Building2, UserPlus, Loader2, Pencil, Trash2 } from 'lucide-react';
 import CreateOrgModal from '../components/CreateOrgModal';
 import CreateOrgAdminModal from '../components/CreateOrgAdminModal';
 import EditOrgModal from '../components/EditOrgModal';
@@ -13,11 +13,28 @@ export default function SystemDashboardPage() {
     const [selectedOrgForAdmin, setSelectedOrgForAdmin] = useState<Organization | null>(null);
     const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
     const [editingAdmin, setEditingAdmin] = useState<any | null>(null); // Using any temporarily to avoid circular deps if types not perfectly aligned, but preferably OrgAdmin
+    const queryClient = useQueryClient();
 
     const { data: organizations, isLoading, error } = useQuery({
         queryKey: ['organizations'],
         queryFn: systemService.getOrganizations,
     });
+
+    const deleteAdminMutation = useMutation({
+        mutationFn: (id: string) => systemService.deleteOrgAdmin(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['organizations'] });
+        },
+        onError: (error: any) => {
+            alert(error.response?.data?.error || 'Failed to delete admin');
+        }
+    });
+
+    const handleDeleteAdmin = (admin: any) => {
+        if (confirm(`Are you sure you want to delete ${admin.full_name}?`)) {
+            deleteAdminMutation.mutate(admin.id);
+        }
+    };
 
     const handleCreateOrg = () => {
         setIsOrgModalOpen(true);

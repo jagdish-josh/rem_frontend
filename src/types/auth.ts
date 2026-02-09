@@ -1,9 +1,11 @@
 export interface User {
     id: string;
     name: string;
+    fullName?: string;
     email: string;
     role: 'ORG_ADMIN' | 'ORG_USER' | 'SYSTEM_ADMIN';
     orgId: string;
+    organizationName?: string;
 }
 
 export interface LoginCredentials {

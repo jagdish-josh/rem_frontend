@@ -35,5 +35,9 @@ export const systemService = {
         // Endpoint based on Admin::OrgAdminsController
         const response = await api.post('/admin/org_admins', data);
         return response.data;
+    },
+
+    deleteOrgAdmin: async (id: string): Promise<void> => {
+        await api.delete(`/admin/org_admins/${id}`);
     }
 };
