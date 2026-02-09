@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../api/authService';
 import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Shield } from 'lucide-react';
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -14,7 +14,7 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
     const navigate = useNavigate();
     const {
         register,
@@ -26,7 +26,7 @@ export default function LoginPage() {
     });
 
     const loginMutation = useMutation({
-        mutationFn: (data: LoginForm) => authService.login(data, false), // Regular user login
+        mutationFn: (data: LoginForm) => authService.login(data, true), // Always use system admin login
         onSuccess: (data) => {
             if (!data.token) {
                 console.error('Login successful but no token received', data);
@@ -35,11 +35,11 @@ export default function LoginPage() {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user_data', JSON.stringify(data.user));
 
-            // Redirect to organization dashboard
-            navigate('/app/dashboard');
+            // Redirect to admin dashboard
+            navigate('/admin/organizations');
         },
         onError: (error: any) => {
-            const message = error.response?.data?.error || error.message || 'Login failed';
+            const message = error.response?.data?.error || error.message || 'Admin login failed';
             setError('root', { message });
         },
     });
@@ -49,14 +49,19 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-xl border border-indigo-100">
                 <div>
+                    <div className="flex justify-center mb-4">
+                        <div className="p-3 bg-indigo-100 rounded-full">
+                            <Shield className="h-8 w-8 text-indigo-600" />
+                        </div>
+                    </div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Sign in to your account
+                        System Admin Portal
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Welcome back to RealEstateAd
+                        Authorized access only
                     </p>
                 </div>
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -70,10 +75,10 @@ export default function LoginPage() {
                                 type="email"
                                 autoComplete="email"
                                 className={cn(
-                                    "appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm",
+                                    "appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm",
                                     errors.email && "border-red-500 focus:border-red-500 focus:ring-red-500"
                                 )}
-                                placeholder="email@example.com"
+                                placeholder="admin@example.com"
                                 {...register('email')}
                             />
                             {errors.email && (
@@ -89,10 +94,10 @@ export default function LoginPage() {
                                 type="password"
                                 autoComplete="current-password"
                                 className={cn(
-                                    "appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm",
+                                    "appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm",
                                     errors.password && "border-red-500 focus:border-red-500 focus:ring-red-500"
                                 )}
-                                placeholder="password"
+                                placeholder="Password"
                                 {...register('password')}
                             />
                             {errors.password && (
@@ -111,15 +116,20 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loginMutation.isPending}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
                         >
                             {loginMutation.isPending && (
                                 <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
                             )}
-                            Sign in
+                            Sign in as Admin
                         </button>
                     </div>
 
+                    <div className="text-center">
+                        <a href="/login" className="text-sm text-indigo-600 hover:text-indigo-500">
+                            ← Back to regular login
+                        </a>
+                    </div>
                 </form>
             </div>
         </div>

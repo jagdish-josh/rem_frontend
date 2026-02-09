@@ -97,13 +97,24 @@ export default function SystemDashboardPage() {
                                                         <span className="text-xs text-gray-500">{admin.email}</span>
                                                     </div>
                                                 </div>
-                                                <button
-                                                    onClick={() => setEditingAdmin(admin)}
-                                                    className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
-                                                    title="Edit Admin"
-                                                >
-                                                    <Pencil className="h-3 w-3" />
-                                                </button>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        onClick={() => setEditingAdmin(admin)}
+                                                        className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
+                                                        title="Edit Admin"
+                                                    >
+                                                        <Pencil className="h-3 w-3 mr-0.5" />
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteAdmin(admin)}
+                                                        className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-700 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                                                        title="Delete Admin"
+                                                    >
+                                                        <Trash2 className="h-3 w-3 mr-0.5" />
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>

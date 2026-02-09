@@ -27,14 +27,14 @@ export default function EditAgentModal({ isOpen, onClose, agent }: EditAgentModa
     const { register, handleSubmit, formState: { errors }, reset, setError, setValue } = useForm<EditAgentForm>({
         resolver: zodResolver(editAgentSchema),
         defaultValues: {
-            full_name: agent?.full_name || '',
+            full_name: agent?.full_name || agent?.name || '',
             phone: agent?.phone || '',
         }
     });
 
     useEffect(() => {
         if (isOpen && agent) {
-            setValue('full_name', agent.full_name);
+            setValue('full_name', agent.full_name || agent.name || '');
             setValue('phone', agent.phone || '');
         }
     }, [isOpen, agent, setValue]);

@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { agentsService } from '../api/agentsService';
 import { authService } from '../../auth/api/authService';
-import { Mail, Phone, MoreVertical, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Mail, Phone, Loader2, Pencil, Trash2 } from 'lucide-react';
 import type { Agent } from '../types';
 
 interface AgentsListProps {
@@ -11,7 +10,6 @@ interface AgentsListProps {
 }
 
 export default function AgentsList({ onEdit, onDelete }: AgentsListProps) {
-    const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
     const { data: agents, isLoading, error } = useQuery({
         queryKey: ['agents'],
@@ -112,51 +110,28 @@ export default function AgentsList({ onEdit, onDelete }: AgentsListProps) {
                                         </span>
                                     </td>
                                     {canManageAgents && agent.role_name === 'ORG_USER' && (
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                                            <button
-                                                onClick={() => setActiveMenuId(activeMenuId === agent.id ? null : agent.id)}
-                                                className="text-gray-400 hover:text-gray-600 transition-colors"
-                                            >
-                                                <MoreVertical className="h-5 w-5" />
-                                            </button>
-
-                                            {activeMenuId === agent.id && (
-                                                <>
-                                                    <div
-                                                        className="fixed inset-0 z-10"
-                                                        onClick={() => setActiveMenuId(null)}
-                                                    />
-                                                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20">
-                                                        <div className="py-1">
-                                                            <button
-                                                                onClick={() => {
-                                                                    onEdit(agent);
-                                                                    setActiveMenuId(null);
-                                                                }}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                                            >
-                                                                <Pencil className="h-4 w-4 mr-2" />
-                                                                Edit Agent
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    onDelete(agent);
-                                                                    setActiveMenuId(null);
-                                                                }}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                                            >
-                                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                                Delete Agent
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </>
-                                            )}
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => onEdit(agent)}
+                                                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
+                                                >
+                                                    <Pencil className="h-3.5 w-3.5 mr-1" />
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => onDelete(agent)}
+                                                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                                                    Delete
+                                                </button>
+                                            </div>
                                         </td>
                                     )}
                                     {canManageAgents && agent.role_name !== 'ORG_USER' && (
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            {/* Empty cell for non-editable users */}
+                                            <span className="text-xs text-gray-400">No actions</span>
                                         </td>
                                     )}
                                 </tr>

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './features/auth/pages/LoginPage'
+import AdminLoginPage from './features/auth/pages/AdminLoginPage'
 import OrgLayout from './features/organization/components/OrgLayout'
 import DashboardPage from './features/organization/pages/DashboardPage'
 import OrgProfilePage from './features/organization/pages/OrgProfilePage'
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
 
         {/* Protected Routes for Organization Members */}
         <Route path="/app" element={<OrgLayout />}>
