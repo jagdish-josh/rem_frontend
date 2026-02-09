@@ -5,6 +5,7 @@ import OrgLayout from './features/organization/components/OrgLayout'
 import DashboardPage from './features/organization/pages/DashboardPage'
 import OrgProfilePage from './features/organization/pages/OrgProfilePage'
 import AgentsPage from './features/agents/pages/AgentsPage'
+import ContactsPage from './features/contacts/pages/ContactsPage'
 import CampaignsPage from './features/campaigns/pages/CampaignsPage'
 import SystemLayout from './features/system/components/SystemLayout'
 import SystemDashboardPage from './features/system/pages/SystemDashboardPage'
@@ -23,7 +24,7 @@ function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="organization" element={<OrgProfilePage />} />
           <Route path="agents" element={<AgentsPage />} />
-          <Route path="contacts" element={<div>Contacts Page</div>} />
+          <Route path="contacts" element={<ContactsPage />} />
           <Route path="campaigns" element={<CampaignsPage />} />
           <Route path="settings" element={<div>Settings Page</div>} />
           <Route path="*" element={<NotFoundPage />} />

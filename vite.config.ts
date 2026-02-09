@@ -41,6 +41,22 @@ export default defineConfig({
             '/email_templates': {
                 target: 'http://localhost:3000',
                 changeOrigin: true,
+            },
+            '/contacts': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+            },
+            '/audiences': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+            },
+            '/preferences': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+            },
+            '/campaigns': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
             }
         }
     },
