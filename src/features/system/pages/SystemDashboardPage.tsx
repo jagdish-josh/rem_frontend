@@ -5,12 +5,14 @@ import { Plus, Building2, UserPlus, Loader2, Pencil } from 'lucide-react';
 import CreateOrgModal from '../components/CreateOrgModal';
 import CreateOrgAdminModal from '../components/CreateOrgAdminModal';
 import EditOrgModal from '../components/EditOrgModal';
+import EditOrgAdminModal from '../components/EditOrgAdminModal';
 import type { Organization } from '../types';
 
 export default function SystemDashboardPage() {
     const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
     const [selectedOrgForAdmin, setSelectedOrgForAdmin] = useState<Organization | null>(null);
     const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+    const [editingAdmin, setEditingAdmin] = useState<any | null>(null); // Using any temporarily to avoid circular deps if types not perfectly aligned, but preferably OrgAdmin
 
     const { data: organizations, isLoading, error } = useQuery({
         queryKey: ['organizations'],
@@ -50,7 +52,7 @@ export default function SystemDashboardPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {organizations?.map((org) => (
-                        <div key={org.id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-6">
+                        <div key={org.id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col h-full">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="p-3 bg-indigo-50 rounded-lg">
                                     <Building2 className="h-6 w-6 text-indigo-600" />
@@ -58,9 +60,39 @@ export default function SystemDashboardPage() {
                             </div>
 
                             <h3 className="text-lg font-bold text-gray-900">{org.name}</h3>
-                            <p className="text-gray-600 text-sm mt-2 line-clamp-3">
+                            <p className="text-gray-600 text-sm mt-2 line-clamp-3 mb-4">
                                 {org.description || 'No description provided'}
                             </p>
+
+                            {/* Org Admins List */}
+                            {org.org_admins && org.org_admins.length > 0 && (
+                                <div className="mt-auto mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Admins</p>
+                                    <div className="space-y-2">
+                                        {org.org_admins.map(admin => (
+                                            <div key={admin.id} className="flex items-center justify-between text-sm">
+                                                <div className="flex items-center">
+                                                    <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-bold mr-2">
+                                                        {admin.full_name?.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium text-gray-900">{admin.full_name}</span>
+                                                        <span className="text-xs text-gray-500">{admin.email}</span>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => setEditingAdmin(admin)}
+                                                    className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                                    title="Edit Admin"
+                                                >
+                                                    <Pencil className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
 
                             {/* Organization Metadata */}
                             <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-2 text-xs text-gray-500">
@@ -68,7 +100,7 @@ export default function SystemDashboardPage() {
                                     <span className="font-medium">ID:</span> {org.id}
                                 </div>
                                 <div className="text-right">
-                                    <span className="font-medium">Created:</span> {new Date(org.created_at).toLocaleDateString()}
+                                    <span className="font-medium">Created:</span> {org.created_at ? new Date(org.created_at).toLocaleDateString() : 'N/A'}
                                 </div>
                             </div>
 
@@ -113,6 +145,13 @@ export default function SystemDashboardPage() {
                 onClose={() => setEditingOrg(null)}
                 organization={editingOrg}
             />
+
+            <EditOrgAdminModal
+                isOpen={!!editingAdmin}
+                onClose={() => setEditingAdmin(null)}
+                admin={editingAdmin}
+            />
+
 
             <CreateOrgAdminModal
                 isOpen={!!selectedOrgForAdmin}

@@ -30,7 +30,7 @@ export default defineConfig({
                 target: 'http://localhost:3000',
                 changeOrigin: true,
             },
-            '/admin': {
+            '/admin/org_admins': {
                 target: 'http://localhost:3000',
                 changeOrigin: true,
             },

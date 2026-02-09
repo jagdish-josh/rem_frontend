@@ -27,7 +27,7 @@ export const systemService = {
     },
 
     updateOrgAdmin: async (data: UpdateOrgAdminDTO): Promise<any> => {
-        const response = await api.patch('/admin/org_admins', data);
+        const response = await api.patch(`/admin/org_admins/${data.id}`, data);
         return response.data;
     },
 

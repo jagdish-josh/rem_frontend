@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { systemService } from '../api/systemService';
 import { cn } from '@/lib/utils';
 import { X, Loader2 } from 'lucide-react';
@@ -23,6 +23,8 @@ interface CreateOrgAdminModalProps {
 }
 
 export default function CreateOrgAdminModal({ isOpen, onClose, organization }: CreateOrgAdminModalProps) {
+    const queryClient = useQueryClient();
+
     const { register, handleSubmit, formState: { errors }, reset, setError } = useForm<AdminForm>({
         resolver: zodResolver(adminSchema),
     });
@@ -38,6 +40,7 @@ export default function CreateOrgAdminModal({ isOpen, onClose, organization }: C
             });
         },
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['organizations'] });
             alert(`Admin created for ${organization?.name} successfully!`);
             reset();
             onClose();

@@ -5,6 +5,7 @@ export interface Organization {
     created_at: string;
     updated_at: string;
     deleted_at?: string;
+    org_admins?: OrgAdmin[];
 }
 
 export interface CreateOrgDTO {

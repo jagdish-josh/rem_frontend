@@ -18,12 +18,38 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response && error.response.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user_data');
-            // Redirect to login page
-            window.location.href = '/login';
+        if (error.response) {
+            const status = error.response.status;
+
+            // Handle different HTTP error codes with user-friendly messages
+            switch (status) {
+                case 401:
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user_data');
+                    window.location.href = '/login';
+                    break;
+                case 429:
+                    // Rate limit exceeded
+                    error.message = 'Too many requests. Please slow down and try again in a moment.';
+                    break;
+                case 500:
+                    error.message = 'Server error. Please try again later.';
+                    break;
+                case 503:
+                    error.message = 'Service temporarily unavailable. Please try again later.';
+                    break;
+                case 404:
+                    // Keep the original 404 error message as it's usually specific
+                    if (!error.message || error.message === 'Request failed with status code 404') {
+                        error.message = 'The requested resource was not found.';
+                    }
+                    break;
+            }
+        } else if (error.request) {
+            // Network error
+            error.message = 'Network error. Please check your internet connection.';
         }
+
         return Promise.reject(error);
     }
 );
