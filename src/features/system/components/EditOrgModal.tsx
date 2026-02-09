@@ -102,7 +102,7 @@ export default function EditOrgModal({ isOpen, onClose, organization }: EditOrgM
                         <input
                             {...register('name')}
                             className={cn(
-                                "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all",
+                                "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900",
                                 errors.name ? "border-red-500 bg-red-50" : "border-gray-200"
                             )}
                             placeholder="Acme Corporation"
@@ -115,7 +115,7 @@ export default function EditOrgModal({ isOpen, onClose, organization }: EditOrgM
                         <textarea
                             {...register('description')}
                             rows={3}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-500 focus:border-transparent outline-none transition-all resize-none"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-500 focus:border-transparent outline-none transition-all resize-none text-gray-900"
                             placeholder="Brief description of the organization..."
                         />
                     </div>

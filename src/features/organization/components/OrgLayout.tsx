@@ -80,7 +80,7 @@ export default function OrgLayout() {
                 </div>
 
                 <nav className="flex-1 px-4 py-4 space-y-1">
-                    {navigation.map((item) => (
+                    {filteredNavigation.map((item) => (
                         <NavLink
                             key={item.name}
                             to={item.href}

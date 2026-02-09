@@ -20,5 +20,10 @@ export const campaignsService = {
     getTemplate: async (id: string): Promise<EmailTemplate> => {
         const response = await api.get(`/email_templates/${id}`);
         return response.data;
+    },
+
+    createEmailType: async (data: { key: string; description?: string }): Promise<EmailType> => {
+        const response = await api.post('/email_types', { email_type: data });
+        return response.data;
     }
 };

@@ -130,8 +130,12 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div
+            className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+        >
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
                     <h2 className="text-2xl font-bold text-gray-900">Create New Contact</h2>
@@ -166,7 +170,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     name="first_name"
                                     value={formData.first_name}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.first_name ? 'border-red-500' : 'border-gray-300'
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${errors.first_name ? 'border-red-500' : 'border-gray-300'
                                         }`}
                                 />
                                 {errors.first_name && (
@@ -184,7 +188,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     name="last_name"
                                     value={formData.last_name}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.last_name ? 'border-red-500' : 'border-gray-300'
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${errors.last_name ? 'border-red-500' : 'border-gray-300'
                                         }`}
                                 />
                                 {errors.last_name && (
@@ -202,7 +206,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${errors.email ? 'border-red-500' : 'border-gray-300'
                                         }`}
                                 />
                                 {errors.email && (
@@ -221,7 +225,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     value={formData.phone}
                                     onChange={handleChange}
                                     maxLength={10}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${errors.phone ? 'border-red-500' : 'border-gray-300'
                                         }`}
                                 />
                                 {errors.phone && (
@@ -246,7 +250,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     value={formData.bhk_type}
                                     onChange={handleChange}
                                     placeholder="e.g., 2BHK, 3BHK"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                                 />
                             </div>
 
@@ -261,7 +265,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     value={formData.furnishing_type}
                                     onChange={handleChange}
                                     placeholder="e.g., Fully Furnished"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                                 />
                             </div>
 
@@ -276,7 +280,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     value={formData.location}
                                     onChange={handleChange}
                                     placeholder="e.g., Mumbai"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                                 />
                             </div>
 
@@ -291,7 +295,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     value={formData.property_type}
                                     onChange={handleChange}
                                     placeholder="e.g., Apartment"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                                 />
                             </div>
 
@@ -306,7 +310,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     value={formData.power_backup_type}
                                     onChange={handleChange}
                                     placeholder="e.g., Full Backup"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                                 />
                             </div>
                         </div>

@@ -62,7 +62,7 @@ export default function AddAgentModal({ isOpen, onClose }: AddAgentModalProps) {
                     )}
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
                         <input
                             {...register('full_name')}
                             className={cn(
@@ -75,7 +75,7 @@ export default function AddAgentModal({ isOpen, onClose }: AddAgentModalProps) {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address <span className="text-red-500">*</span></label>
                         <input
                             {...register('email')}
                             type="email"

@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../api/authService';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function AdminLoginPage() {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const {
         register,
         handleSubmit,
@@ -34,6 +35,12 @@ export default function AdminLoginPage() {
             }
             localStorage.setItem('token', data.token);
             localStorage.setItem('user_data', JSON.stringify(data.user));
+
+            // Clear all cached queries to ensure fresh data is fetched
+            queryClient.clear();
+
+            // Set the user data in the auth cache
+            queryClient.setQueryData(['auth', 'user'], data.user);
 
             // Redirect to admin dashboard
             navigate('/admin/organizations');

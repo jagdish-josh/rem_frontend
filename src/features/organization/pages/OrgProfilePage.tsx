@@ -75,7 +75,7 @@ export default function OrgProfilePage() {
                         <div className="mt-1">
                             <select
                                 id="timezone"
-                                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white text-gray-900"
                                 {...register("timezone")}
                             >
                                 <option value="America/New_York">Eastern Time (US & Canada)</option>

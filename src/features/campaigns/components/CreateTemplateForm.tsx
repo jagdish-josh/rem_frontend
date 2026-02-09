@@ -90,12 +90,12 @@ export default function CreateTemplateForm({ onClose }: CreateTemplateFormProps)
                             <label className="block text-sm font-medium text-gray-700 mb-1">Email Type</label>
                             <select
                                 {...register('email_type_id')}
-                                className={cn("w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white", errors.email_type_id ? "border-red-500" : "border-gray-200")}
+                                className={cn("w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900", errors.email_type_id ? "border-red-500" : "border-gray-200")}
                                 disabled={isLoadingTypes}
                             >
                                 <option value="">Select a type...</option>
                                 {emailTypes?.map(type => (
-                                    <option key={type.id} value={type.id}>{type.name}</option>
+                                    <option key={type.id} value={type.id}>{type.key}</option>
                                 ))}
                             </select>
                             {errors.email_type_id && <p className="text-xs text-red-500 mt-1">{errors.email_type_id.message}</p>}

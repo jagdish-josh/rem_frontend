@@ -4,10 +4,14 @@ import { campaignsService } from '../api/campaignsService';
 import { Plus, Megaphone, FileText, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CreateTemplateForm from '../components/CreateTemplateForm';
+import CreateEmailTypeModal from '../components/CreateEmailTypeModal';
+import CreateCampaignModal from '../components/CreateCampaignModal';
 
 export default function CampaignsPage() {
     const [activeTab, setActiveTab] = useState<'campaigns' | 'templates'>('templates');
     const [isCreating, setIsCreating] = useState(false);
+    const [showEmailTypeModal, setShowEmailTypeModal] = useState(false);
+    const [showCampaignModal, setShowCampaignModal] = useState(false);
 
     const { data: templates, isLoading, error } = useQuery({
         queryKey: ['emailTemplates'],
@@ -22,14 +26,32 @@ export default function CampaignsPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Campaigns & Templates</h1>
                     <p className="text-gray-500 mt-1">Manage your email marketing campaigns and design templates.</p>
                 </div>
-                {activeTab === 'templates' && !isCreating && (
+                {activeTab === 'campaigns' && (
                     <button
-                        onClick={() => setIsCreating(true)}
-                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+                        onClick={() => setShowCampaignModal(true)}
+                        className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium"
                     >
                         <Plus className="h-5 w-5 mr-2" />
-                        New Template
+                        New Campaign
                     </button>
+                )}
+                {activeTab === 'templates' && !isCreating && (
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setShowEmailTypeModal(true)}
+                            className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors shadow-sm font-medium"
+                        >
+                            <Plus className="h-5 w-5 mr-2" />
+                            Create Email Type
+                        </button>
+                        <button
+                            onClick={() => setIsCreating(true)}
+                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+                        >
+                            <Plus className="h-5 w-5 mr-2" />
+                            New Template
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -108,6 +130,16 @@ export default function CampaignsPage() {
                     </div>
                 )}
             </div>
+
+            <CreateEmailTypeModal
+                isOpen={showEmailTypeModal}
+                onClose={() => setShowEmailTypeModal(false)}
+            />
+
+            <CreateCampaignModal
+                isOpen={showCampaignModal}
+                onClose={() => setShowCampaignModal(false)}
+            />
         </div>
     );
 }

@@ -7,7 +7,7 @@ import CSVImportModal from './CSVImportModal';
 
 export default function ContactsList() {
     const [page, setPage] = useState(1);
-    const [perPage] = useState(25);
+    const [perPage] = useState(10);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
 

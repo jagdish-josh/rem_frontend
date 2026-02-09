@@ -74,11 +74,11 @@ export default function CreateOrgAdminModal({ isOpen, onClose, organization }: C
                     )}
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
                         <input
                             {...register('full_name')}
                             className={cn(
-                                "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all",
+                                "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900",
                                 errors.full_name ? "border-red-500 bg-red-50" : "border-gray-200"
                             )}
                             placeholder="Admin Name"
@@ -87,12 +87,12 @@ export default function CreateOrgAdminModal({ isOpen, onClose, organization }: C
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address <span className="text-red-500">*</span></label>
                         <input
                             {...register('email')}
                             type="email"
                             className={cn(
-                                "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all",
+                                "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900",
                                 errors.email ? "border-red-500 bg-red-50" : "border-gray-200"
                             )}
                             placeholder="admin@org.com"
@@ -105,7 +105,7 @@ export default function CreateOrgAdminModal({ isOpen, onClose, organization }: C
                         <input
                             {...register('phone')}
                             type="tel"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900"
                             placeholder="+1 (555) 000-0000"
                         />
                     </div>
