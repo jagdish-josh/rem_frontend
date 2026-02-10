@@ -4,8 +4,24 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../api/authService';
-import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address').max(30, "Email must be less than 100 characters"),
@@ -17,13 +33,13 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        setError,
-    } = useForm<LoginForm>({
+
+    const form = useForm<LoginForm>({
         resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: '',
+            password: '',
+        }
     });
 
     const loginMutation = useMutation({
@@ -47,7 +63,7 @@ export default function LoginPage() {
         },
         onError: (error: any) => {
             const message = error.response?.data?.error || error.message || 'Login failed';
-            setError('root', { message });
+            form.setError('root', { message });
         },
     });
 
@@ -57,78 +73,64 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Sign in to your account
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
+            <Card className="w-full max-w-md">
+                <CardHeader className="space-y-1 text-center">
+                    <CardTitle className="text-2xl font-bold">Sign in to your account</CardTitle>
+                    <CardDescription>
                         Welcome back to RealEstateAd
-                    </p>
-                </div>
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-                    <div className="rounded-md shadow-sm -space-y-px">
-                        <div className="mb-4">
-                            <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
-                                Email address
-                            </label>
-                            <input
-                                id="email-address"
-                                type="email"
-                                autoComplete="email"
-                                className={cn(
-                                    "appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm",
-                                    errors.email && "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            {form.formState.errors.root && (
+                                <div className="p-3 rounded-md bg-destructive/15 text-destructive text-sm">
+                                    {form.formState.errors.root.message}
+                                </div>
+                            )}
+
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Email address</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="email@example.com" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
                                 )}
-                                placeholder="email@example.com"
-                                {...register('email')}
                             />
-                            {errors.email && (
-                                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-                            )}
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                                Password
-                            </label>
-                            <input
-                                id="password"
-                                type="password"
-                                autoComplete="current-password"
-                                className={cn(
-                                    "appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm",
-                                    errors.password && "border-red-500 focus:border-red-500 focus:ring-red-500"
+
+                            <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Password</FormLabel>
+                                        <FormControl>
+                                            <Input type="password" placeholder="Password" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
                                 )}
-                                placeholder="password"
-                                {...register('password')}
                             />
-                            {errors.password && (
-                                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-                            )}
-                        </div>
-                    </div>
 
-                    {errors.root && (
-                        <div className="p-3 rounded-md bg-red-50 text-red-700 text-sm">
-                            {errors.root.message}
-                        </div>
-                    )}
-
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={loginMutation.isPending}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
-                        >
-                            {loginMutation.isPending && (
-                                <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-                            )}
-                            Sign in
-                        </button>
-                    </div>
-
-                </form>
-            </div>
+                            <Button
+                                type="submit"
+                                className="w-full bg-blue-600 hover:bg-blue-700"
+                                disabled={loginMutation.isPending}
+                            >
+                                {loginMutation.isPending && (
+                                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                                )}
+                                Sign in
+                            </Button>
+                        </form>
+                    </Form>
+                </CardContent>
+            </Card>
         </div>
     );
 }

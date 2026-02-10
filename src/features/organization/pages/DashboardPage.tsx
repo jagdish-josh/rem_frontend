@@ -3,6 +3,12 @@ import { contactService } from '@/features/contacts/api/contactService';
 import { agentsService } from '@/features/agents/api/agentsService';
 import { authService } from '@/features/auth/api/authService';
 import { Users, Contact, Megaphone, Loader2 } from 'lucide-react';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 
 export default function DashboardPage() {
     const { data: user } = useQuery({
@@ -27,56 +33,63 @@ export default function DashboardPage() {
     const isOrgAdmin = user?.role === 'ORG_ADMIN';
 
     return (
-        <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
-            <div className={`grid grid-cols-1 gap-6 ${isOrgAdmin ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
-                {/* Total Contacts */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-500">Total Contacts</p>
-                            {loadingContacts ? (
-                                <Loader2 className="h-8 w-8 animate-spin text-gray-400 mt-2" />
-                            ) : (
-                                <p className="text-3xl font-bold text-gray-900 mt-2">{totalContacts.toLocaleString()}</p>
-                            )}
-                        </div>
-                        <div className="p-3 bg-blue-50 rounded-lg">
-                            <Contact className="h-6 w-6 text-blue-600" />
-                        </div>
-                    </div>
-                </div>
+        <div className="space-y-6">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
 
-                {/* Active Campaigns */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-500">Active Campaigns</p>
-                            <p className="text-3xl font-bold text-blue-600 mt-2">{activeCampaigns}</p>
-                        </div>
-                        <div className="p-3 bg-purple-50 rounded-lg">
-                            <Megaphone className="h-6 w-6 text-purple-600" />
-                        </div>
-                    </div>
-                </div>
+            <div className={`grid gap-4 md:grid-cols-2 ${isOrgAdmin ? 'lg:grid-cols-3' : ''}`}>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                            Total Contacts
+                        </CardTitle>
+                        <Contact className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        {loadingContacts ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        ) : (
+                            <div className="text-2xl font-bold">{totalContacts.toLocaleString()}</div>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Current contact database size
+                        </p>
+                    </CardContent>
+                </Card>
 
-                {/* Agents - Only show for ORG_ADMIN */}
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                            Active Campaigns
+                        </CardTitle>
+                        <Megaphone className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{activeCampaigns}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Campaigns currently running
+                        </p>
+                    </CardContent>
+                </Card>
+
                 {isOrgAdmin && (
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-500">Agents</p>
-                                {loadingAgents ? (
-                                    <Loader2 className="h-8 w-8 animate-spin text-gray-400 mt-2" />
-                                ) : (
-                                    <p className="text-3xl font-bold text-gray-900 mt-2">{totalAgents.toLocaleString()}</p>
-                                )}
-                            </div>
-                            <div className="p-3 bg-green-50 rounded-lg">
-                                <Users className="h-6 w-6 text-green-600" />
-                            </div>
-                        </div>
-                    </div>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Agents
+                            </CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            {loadingAgents ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            ) : (
+                                <div className="text-2xl font-bold">{totalAgents.toLocaleString()}</div>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Registered agents in organization
+                            </p>
+                        </CardContent>
+                    </Card>
                 )}
             </div>
         </div>

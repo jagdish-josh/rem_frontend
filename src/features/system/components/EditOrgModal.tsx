@@ -4,9 +4,25 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { systemService } from '../api/systemService';
-import { cn } from '@/lib/utils';
-import { X, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { Organization } from '../types';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 const editOrgSchema = z.object({
     name: z.string().min(2, "Name is required"),
@@ -24,20 +40,20 @@ interface EditOrgModalProps {
 export default function EditOrgModal({ isOpen, onClose, organization }: EditOrgModalProps) {
     const queryClient = useQueryClient();
 
-    const { register, handleSubmit, formState: { errors }, reset, setError, setValue } = useForm<EditOrgForm>({
+    const form = useForm<EditOrgForm>({
         resolver: zodResolver(editOrgSchema),
         defaultValues: {
-            name: organization?.name || '',
-            description: organization?.description || '',
+            name: '',
+            description: '',
         }
     });
 
     useEffect(() => {
         if (isOpen && organization) {
-            setValue('name', organization.name);
-            setValue('description', organization.description || '');
+            form.setValue('name', organization.name);
+            form.setValue('description', organization.description || '');
         }
-    }, [isOpen, organization, setValue]);
+    }, [isOpen, organization, form]);
 
     const mutation = useMutation({
         mutationFn: (data: EditOrgForm) => {
@@ -53,7 +69,7 @@ export default function EditOrgModal({ isOpen, onClose, organization }: EditOrgM
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['organizations'] });
             onClose();
-            reset();
+            form.reset();
         },
         onError: (error: any) => {
             const errors = error.response?.data?.errors;
@@ -63,11 +79,11 @@ export default function EditOrgModal({ isOpen, onClose, organization }: EditOrgM
                     messages.push(...errors.organization);
                 }
                 const message = messages.length > 0 ? messages.join('; ') : error.message || 'Failed to update organization';
-                setError('root', { message });
+                form.setError('root', { message });
             } else if (Array.isArray(errors)) {
-                setError('root', { message: errors.join('; ') });
+                form.setError('root', { message: errors.join('; ') });
             } else {
-                setError('root', { message: error.message || 'Failed to update organization' });
+                form.setError('root', { message: error.message || 'Failed to update organization' });
             }
         }
     });
@@ -76,70 +92,73 @@ export default function EditOrgModal({ isOpen, onClose, organization }: EditOrgM
         mutation.mutate(data);
     };
 
-    if (!isOpen || !organization) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-900">
-                        Edit Organization
-                    </h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Edit Organization</DialogTitle>
+                </DialogHeader>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-                    {errors.root && (
-                        <div className="p-3 rounded-md bg-red-50 text-red-700 text-sm">
-                            {errors.root.message}
-                        </div>
-                    )}
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+                        {form.formState.errors.root && (
+                            <div className="p-3 rounded-md bg-destructive/15 text-destructive text-sm">
+                                {form.formState.errors.root.message}
+                            </div>
+                        )}
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
-                        <input
-                            {...register('name')}
-                            className={cn(
-                                "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900",
-                                errors.name ? "border-red-500 bg-red-50" : "border-gray-200"
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Organization Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Acme Corporation" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
                             )}
-                            placeholder="Acme Corporation"
                         />
-                        {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
-                    </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
-                        <textarea
-                            {...register('description')}
-                            rows={3}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-500 focus:border-transparent outline-none transition-all resize-none text-gray-900"
-                            placeholder="Brief description of the organization..."
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description (Optional)</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Brief description of the organization..."
+                                            rows={3}
+                                            className="resize-none"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
                         />
-                    </div>
 
-                    <div className="pt-4 flex justify-end gap-3">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            disabled={mutation.isPending}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={mutation.isPending}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                        >
-                            {mutation.isPending && <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />}
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={onClose}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={mutation.isPending}
+                            >
+                                {mutation.isPending && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+                                Save Changes
+                            </Button>
+                        </div>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
     );
 }

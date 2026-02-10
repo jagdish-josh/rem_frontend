@@ -7,11 +7,11 @@ import { authService } from '../../auth/api/authService';
 import { agentsService } from '../api/agentsService';
 import { Plus } from 'lucide-react';
 import type { Agent } from '../types';
+import { Button } from '@/components/ui/button';
 
 export default function AgentsPage() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
-    const [deletingAgent, setDeletingAgent] = useState<Agent | null>(null);
     const queryClient = useQueryClient();
 
     const { data: user } = useQuery({
@@ -26,7 +26,6 @@ export default function AgentsPage() {
         mutationFn: (id: string) => agentsService.deleteAgent(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['agents'] });
-            setDeletingAgent(null);
         },
         onError: (error: any) => {
             alert(error.response?.data?.error || 'Failed to delete agent');
@@ -47,13 +46,13 @@ export default function AgentsPage() {
                     <p className="text-gray-500 mt-1">Manage users who have access to this organization.</p>
                 </div>
                 {canManageAgents && (
-                    <button
+                    <Button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+                        className="flex items-center"
                     >
-                        <Plus className="h-5 w-5 mr-2" />
+                        <Plus className="h-4 w-4 mr-2" />
                         Add Agent
-                    </button>
+                    </Button>
                 )}
             </div>
 

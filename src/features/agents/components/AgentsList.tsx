@@ -1,8 +1,21 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { agentsService } from '../api/agentsService';
 import { authService } from '../../auth/api/authService';
-import { Mail, Phone, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Mail, Phone, Loader2, Pencil, Trash2, Search } from 'lucide-react';
 import type { Agent } from '../types';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface AgentsListProps {
     onEdit: (agent: Agent) => void;
@@ -10,6 +23,7 @@ interface AgentsListProps {
 }
 
 export default function AgentsList({ onEdit, onDelete }: AgentsListProps) {
+    const [searchTerm, setSearchTerm] = useState('');
 
     const { data: agents, isLoading, error } = useQuery({
         queryKey: ['agents'],
@@ -27,118 +41,124 @@ export default function AgentsList({ onEdit, onDelete }: AgentsListProps) {
     if (isLoading) {
         return (
             <div className="flex h-64 items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         )
     }
 
     if (error) {
         return (
-            <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
+            <div className="p-4 bg-destructive/15 text-destructive rounded-lg border border-destructive/20">
                 Error loading agents. Please try again later.
             </div>
         )
     }
 
+    const filteredAgents = agents?.filter(agent =>
+        (agent.name || agent.full_name)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        agent.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Agent
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Contact
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Role
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                            </th>
-                            {canManageAgents && (
-                                <th scope="col" className="relative px-6 py-3">
-                                    <span className="sr-only">Actions</span>
-                                </th>
-                            )}
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {agents?.length === 0 ? (
-                            <tr>
-                                <td colSpan={canManageAgents ? 5 : 4} className="px-6 py-12 text-center text-gray-500">
-                                    No agents found. Add your first agent!
-                                </td>
-                            </tr>
+        <div className="space-y-4">
+            <div className="flex items-center gap-2 max-w-sm">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Search agents..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-9"
+                />
+            </div>
+
+            <div className="border rounded-md">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Agent</TableHead>
+                            <TableHead>Contact</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Status</TableHead>
+                            {canManageAgents && <TableHead className="text-right">Actions</TableHead>}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredAgents?.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={canManageAgents ? 5 : 4} className="h-24 text-center">
+                                    No agents found.
+                                </TableCell>
+                            </TableRow>
                         ) : (
-                            agents?.map((agent) => (
-                                <tr key={agent.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div className="h-10 w-10 flex-shrink-0 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold">
-                                                {(agent.name || agent.full_name)?.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900">{agent.name || agent.full_name}</div>
-                                            </div>
+                            filteredAgents?.map((agent) => (
+                                <TableRow key={agent.id} className="hover:bg-muted/50">
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarFallback className="bg-primary/10 text-primary">
+                                                    {(agent.name || agent.full_name)?.charAt(0).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="font-medium">{agent.name || agent.full_name}</div>
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    </TableCell>
+                                    <TableCell>
                                         <div className="flex flex-col space-y-1">
-                                            <div className="flex items-center text-sm text-gray-500">
+                                            <div className="flex items-center text-sm text-muted-foreground">
                                                 <Mail className="h-3.5 w-3.5 mr-1.5" />
                                                 {agent.email}
                                             </div>
                                             {agent.phone && (
-                                                <div className="flex items-center text-sm text-gray-500">
+                                                <div className="flex items-center text-sm text-muted-foreground">
                                                     <Phone className="h-3.5 w-3.5 mr-1.5" />
                                                     {agent.phone}
                                                 </div>
                                             )}
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="secondary" className="capitalize">
                                             {agent.role_name ? agent.role_name.replace('_', ' ').toLowerCase() : 'User'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 shadow-sm border border-green-200">
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
                                             Active
-                                        </span>
-                                    </td>
-                                    {canManageAgents && agent.role_name === 'ORG_USER' && (
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => onEdit(agent)}
-                                                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
-                                                >
-                                                    <Pencil className="h-3.5 w-3.5 mr-1" />
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => onDelete(agent)}
-                                                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </td>
+                                        </Badge>
+                                    </TableCell>
+                                    {canManageAgents && (
+                                        <TableCell className="text-right">
+                                            {agent.role_name === 'ORG_USER' ? (
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => onEdit(agent)}
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                        <span className="sr-only">Edit</span>
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => onDelete(agent)}
+                                                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                        <span className="sr-only">Delete</span>
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-muted-foreground italic">No actions</span>
+                                            )}
+                                        </TableCell>
                                     )}
-                                    {canManageAgents && agent.role_name !== 'ORG_USER' && (
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <span className="text-xs text-gray-400">No actions</span>
-                                        </td>
-                                    )}
-                                </tr>
+                                </TableRow>
                             ))
                         )}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </div>
         </div>
     );

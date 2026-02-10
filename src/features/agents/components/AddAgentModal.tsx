@@ -3,8 +3,24 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { agentsService } from '../api/agentsService';
-import { cn } from '@/lib/utils'; // Assumed from context
-import { X, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const agentSchema = z.object({
     full_name: z.string().min(2, "Name is required").max(30, "Name must be less than 100 characters").regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
@@ -21,20 +37,26 @@ interface AddAgentModalProps {
 
 export default function AddAgentModal({ isOpen, onClose }: AddAgentModalProps) {
     const queryClient = useQueryClient();
-    const { register, handleSubmit, formState: { errors }, reset, setError } = useForm<AgentForm>({
+    const form = useForm<AgentForm>({
         resolver: zodResolver(agentSchema),
+        defaultValues: {
+            full_name: '',
+            email: '',
+            phone: '',
+        }
     });
 
     const createAgentMutation = useMutation({
         mutationFn: agentsService.createAgent,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['agents'] });
-            reset();
+            toast.success("Agent created successfully");
+            form.reset();
             onClose();
         },
         onError: (error: any) => {
             const message = error.response?.data?.error || error.response?.data?.errors?.join(', ') || error.message || 'Failed to create agent';
-            setError('root', { message });
+            form.setError('root', { message });
         }
     });
 
@@ -42,81 +64,82 @@ export default function AddAgentModal({ isOpen, onClose }: AddAgentModalProps) {
         createAgentMutation.mutate(data);
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-900">Add New Agent</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Add New Agent</DialogTitle>
+                </DialogHeader>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-                    {errors.root && (
-                        <div className="p-3 rounded-md bg-red-50 text-red-700 text-sm">
-                            {errors.root.message}
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+                        {form.formState.errors.root && (
+                            <div className="p-3 rounded-md bg-destructive/15 text-destructive text-sm">
+                                {form.formState.errors.root.message}
+                            </div>
+                        )}
+
+                        <FormField
+                            control={form.control}
+                            name="full_name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Full Name <span className="text-destructive">*</span></FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="John Doe" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email Address <span className="text-destructive">*</span></FormLabel>
+                                    <FormControl>
+                                        <Input type="email" placeholder="john@example.com" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Phone Number</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="+1 (555) 000-0000" type="tel" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={onClose}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={createAgentMutation.isPending}
+                            >
+                                {createAgentMutation.isPending && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+                                Create Agent
+                            </Button>
                         </div>
-                    )}
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
-                        <input
-                            {...register('full_name')}
-                            className={cn(
-                                "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all",
-                                errors.full_name ? "border-red-500 bg-red-50" : "border-gray-200"
-                            )}
-                            placeholder="John Doe"
-                        />
-                        {errors.full_name && <p className="text-xs text-red-500 mt-1">{errors.full_name.message}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address <span className="text-red-500">*</span></label>
-                        <input
-                            {...register('email')}
-                            type="email"
-                            className={cn(
-                                "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all",
-                                errors.email ? "border-red-500 bg-red-50" : "border-gray-200"
-                            )}
-                            placeholder="john@example.com"
-                        />
-                        {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                        <input
-                            {...register('phone')}
-                            type="tel"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                            placeholder="+1 (555) 000-0000"
-                        />
-                    </div>
-
-                    <div className="pt-4 flex justify-end gap-3">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={createAgentMutation.isPending}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                        >
-                            {createAgentMutation.isPending && <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />}
-                            Create Agent
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
     );
 }

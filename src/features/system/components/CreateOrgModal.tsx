@@ -3,8 +3,25 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { systemService } from '../api/systemService';
-import { cn } from '@/lib/utils';
-import { X, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { useEffect } from 'react';
 
 const createOrgSchema = z.object({
     name: z.string().min(2, "Name is required"),
@@ -24,9 +41,23 @@ interface CreateOrgModalProps {
 export default function CreateOrgModal({ isOpen, onClose }: CreateOrgModalProps) {
     const queryClient = useQueryClient();
 
-    const { register, handleSubmit, formState: { errors }, reset, setError } = useForm<CreateOrgForm>({
+    const form = useForm<CreateOrgForm>({
         resolver: zodResolver(createOrgSchema),
+        defaultValues: {
+            name: '',
+            description: '',
+            adminName: '',
+            adminEmail: '',
+            adminPhone: '',
+        }
     });
+
+    // Reset form when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            form.reset();
+        }
+    }, [isOpen, form]);
 
     const mutation = useMutation({
         mutationFn: (data: CreateOrgForm) => {
@@ -45,7 +76,7 @@ export default function CreateOrgModal({ isOpen, onClose }: CreateOrgModalProps)
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['organizations'] });
             onClose();
-            reset();
+            form.reset();
         },
         onError: (error: any) => {
             const errors = error.response?.data?.errors;
@@ -61,11 +92,11 @@ export default function CreateOrgModal({ isOpen, onClose }: CreateOrgModalProps)
                     messages.push(...errors.role);
                 }
                 const message = messages.length > 0 ? messages.join('; ') : error.message || 'Failed to create organization';
-                setError('root', { message });
+                form.setError('root', { message });
             } else if (Array.isArray(errors)) {
-                setError('root', { message: errors.join('; ') });
+                form.setError('root', { message: errors.join('; ') });
             } else {
-                setError('root', { message: error.message || 'Failed to create organization' });
+                form.setError('root', { message: error.message || 'Failed to create organization' });
             }
         }
     });
@@ -74,115 +105,122 @@ export default function CreateOrgModal({ isOpen, onClose }: CreateOrgModalProps)
         mutation.mutate(data);
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200 h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
-                    <h2 className="text-xl font-bold text-gray-900">
-                        Create Organization
-                    </h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Create Organization</DialogTitle>
+                </DialogHeader>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-                    {errors.root && (
-                        <div className="p-3 rounded-md bg-red-50 text-red-700 text-sm">
-                            {errors.root.message}
-                        </div>
-                    )}
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        {form.formState.errors.root && (
+                            <div className="p-3 rounded-md bg-destructive/15 text-destructive text-sm">
+                                {form.formState.errors.root.message}
+                            </div>
+                        )}
 
-                    <div className="border-b border-gray-100 pb-4 mb-4">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Organization Details</h3>
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name <span className="text-red-500">*</span></label>
-                                <input
-                                    {...register('name')}
-                                    className={cn(
-                                        "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900",
-                                        errors.name ? "border-red-500 bg-red-50" : "border-gray-200"
-                                    )}
-                                    placeholder="Acme Real Estate"
-                                />
-                                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
-                            </div>
+                            <h3 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground border-b pb-2">Organization Details</h3>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                <textarea
-                                    {...register('description')}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900"
-                                    placeholder="Optional description..."
-                                    rows={3}
-                                />
-                            </div>
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Organization Name <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Acme Real Estate" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="description"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Description</FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                placeholder="Optional description..."
+                                                rows={3}
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
-                    </div>
 
-                    <div className="border-b border-gray-100 pb-4 mb-4">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Primary Admin User</h3>
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Admin Name <span className="text-red-500">*</span></label>
-                                <input
-                                    {...register('adminName')}
-                                    className={cn(
-                                        "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900",
-                                        errors.adminName ? "border-red-500 bg-red-50" : "border-gray-200"
-                                    )}
-                                    placeholder="John Doe"
-                                />
-                                {errors.adminName && <p className="text-xs text-red-500 mt-1">{errors.adminName.message}</p>}
-                            </div>
+                            <h3 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground border-b pb-2">Primary Admin User</h3>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Admin Email <span className="text-red-500">*</span></label>
-                                <input
-                                    {...register('adminEmail')}
-                                    type="email"
-                                    className={cn(
-                                        "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900",
-                                        errors.adminEmail ? "border-red-500 bg-red-50" : "border-gray-200"
-                                    )}
-                                    placeholder="john@acme.com"
-                                />
-                                {errors.adminEmail && <p className="text-xs text-red-500 mt-1">{errors.adminEmail.message}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone (Optional)</label>
-                                <input
-                                    {...register('adminPhone')}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900"
-                                    placeholder="+1 (555) 000-0000"
-                                />
-                            </div>
+                            <FormField
+                                control={form.control}
+                                name="adminName"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Admin Name <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="John Doe" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="adminEmail"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Admin Email <span className="text-destructive">*</span></FormLabel>
+                                        <FormControl>
+                                            <Input type="email" placeholder="john@acme.com" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="adminPhone"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Phone (Optional)</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="9876543210" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
-                    </div>
 
-                    <div className="pt-2 flex justify-end gap-3 sticky bottom-0 bg-white p-4 border-t border-gray-100">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            disabled={mutation.isPending}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={mutation.isPending}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                        >
-                            {mutation.isPending && <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />}
-                            Create Organization
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={onClose}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={mutation.isPending}
+                            >
+                                {mutation.isPending && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+                                Create Organization
+                            </Button>
+                        </div>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
     );
 }

@@ -3,8 +3,26 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { campaignsService } from '../api/campaignsService';
-import { cn } from '@/lib/utils';
 import { Loader2, X } from 'lucide-react';
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const templateSchema = z.object({
     name: z.string().min(2, "Name is required"),
@@ -32,10 +50,18 @@ export default function CreateTemplateForm({ onClose }: CreateTemplateFormProps)
         queryFn: campaignsService.getEmailTypes
     });
 
-    const { register, handleSubmit, formState: { errors }, setError } = useForm<TemplateForm>({
+    const form = useForm<TemplateForm>({
         resolver: zodResolver(templateSchema),
         defaultValues: {
             from_email: '',
+            name: '',
+            subject: '',
+            preheader: '',
+            email_type_id: '',
+            from_name: '',
+            reply_to: '',
+            html_body: '',
+            text_body: '',
         }
     });
 
@@ -50,7 +76,7 @@ export default function CreateTemplateForm({ onClose }: CreateTemplateFormProps)
         },
         onError: (error: any) => {
             const message = error.response?.data?.errors?.join(', ') || error.message || 'Failed to create template';
-            setError('root', { message });
+            form.setError('root', { message });
         }
     });
 
@@ -59,144 +85,202 @@ export default function CreateTemplateForm({ onClose }: CreateTemplateFormProps)
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                <h2 className="text-xl font-bold text-gray-900">Create Email Template</h2>
-                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-                    <X className="h-5 w-5" />
-                </button>
-            </div>
+        <Card className="w-full h-full border-none shadow-none md:border md:shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+                <CardTitle className="text-xl font-bold">Create Email Template</CardTitle>
+                <Button variant="ghost" size="icon" onClick={onClose}>
+                    <X className="h-4 w-4" />
+                </Button>
+            </CardHeader>
+            <CardContent className="p-6">
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        {form.formState.errors.root && (
+                            <div className="p-3 rounded-md bg-destructive/15 text-destructive text-sm">
+                                {form.formState.errors.root.message}
+                            </div>
+                        )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-                {errors.root && (
-                    <div className="p-3 rounded-md bg-red-50 text-red-700 text-sm">
-                        {errors.root.message}
-                    </div>
-                )}
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <div className="space-y-4">
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Template Name</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="e.g. Monthly Newsletter" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Template Name</label>
-                            <input
-                                {...register('name')}
-                                className={cn("w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none", errors.name ? "border-red-500" : "border-gray-200")}
-                                placeholder="e.g. Monthly Newsletter"
-                            />
-                            {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
+                                <FormField
+                                    control={form.control}
+                                    name="email_type_id"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Email Type</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingTypes}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select a type..." />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {emailTypes?.map(type => (
+                                                        <SelectItem key={type.id} value={type.id.toString()}>
+                                                            {type.key}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="space-y-4">
+                                <FormField
+                                    control={form.control}
+                                    name="subject"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Subject Line</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Subject of the email" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="preheader"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Preheader Text</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Optional preview text" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email Type</label>
-                            <select
-                                {...register('email_type_id')}
-                                className={cn("w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900", errors.email_type_id ? "border-red-500" : "border-gray-200")}
-                                disabled={isLoadingTypes}
+                        <div className="border-t pt-6">
+                            <h3 className="text-sm font-medium mb-4 uppercase tracking-wide text-muted-foreground">Sender Info</h3>
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                <FormField
+                                    control={form.control}
+                                    name="from_name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>From Name</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="e.g. Acme Real Estate" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="from_email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>From Email</FormLabel>
+                                            <FormControl>
+                                                <Input type="email" placeholder="info@acme.com" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="reply_to"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Reply-To Email</FormLabel>
+                                            <FormControl>
+                                                <Input type="email" placeholder="support@acme.com" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="border-t pt-6">
+                            <h3 className="text-sm font-medium mb-4 uppercase tracking-wide text-muted-foreground">Content</h3>
+                            <FormField
+                                control={form.control}
+                                name="html_body"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>HTML Body</FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                rows={6}
+                                                className="font-mono text-sm"
+                                                placeholder="<html>...</html>"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="text_body"
+                                render={({ field }) => (
+                                    <FormItem className="mt-4">
+                                        <FormLabel>Text Body</FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                rows={4}
+                                                className="font-mono text-sm"
+                                                placeholder="Plain text version..."
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="pt-4 flex justify-end gap-3">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={onClose}
                             >
-                                <option value="">Select a type...</option>
-                                {emailTypes?.map(type => (
-                                    <option key={type.id} value={type.id}>{type.key}</option>
-                                ))}
-                            </select>
-                            {errors.email_type_id && <p className="text-xs text-red-500 mt-1">{errors.email_type_id.message}</p>}
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={createMutation.isPending}
+                            >
+                                {createMutation.isPending && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+                                Save Template
+                            </Button>
                         </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Subject Line</label>
-                            <input
-                                {...register('subject')}
-                                className={cn("w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none", errors.subject ? "border-red-500" : "border-gray-200")}
-                                placeholder="Subject of the email"
-                            />
-                            {errors.subject && <p className="text-xs text-red-500 mt-1">{errors.subject.message}</p>}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Preheader Text</label>
-                            <input
-                                {...register('preheader')}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="Optional preview text"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="border-t border-gray-100 pt-6">
-                    <h3 className="text-sm font-medium text-gray-900 mb-4 uppercase tracking-wide">Sender Info</h3>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">From Name</label>
-                            <input
-                                {...register('from_name')}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="e.g. Acme Real Estate"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">From Email</label>
-                            <input
-                                {...register('from_email')}
-                                type="email"
-                                className={cn("w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none", errors.from_email ? "border-red-500" : "border-gray-200")}
-                                placeholder="info@acme.com"
-                            />
-                            {errors.from_email && <p className="text-xs text-red-500 mt-1">{errors.from_email.message}</p>}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Reply-To Email</label>
-                            <input
-                                {...register('reply_to')}
-                                type="email"
-                                className={cn("w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none", errors.reply_to ? "border-red-500" : "border-gray-200")}
-                                placeholder="support@acme.com"
-                            />
-                            {errors.reply_to && <p className="text-xs text-red-500 mt-1">{errors.reply_to.message}</p>}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="border-t border-gray-100 pt-6">
-                    <h3 className="text-sm font-medium text-gray-900 mb-4 uppercase tracking-wide">Content</h3>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">HTML Body</label>
-                        <textarea
-                            {...register('html_body')}
-                            rows={6}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
-                            placeholder="<html>...</html>"
-                        />
-                    </div>
-                    <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Text Body</label>
-                        <textarea
-                            {...register('text_body')}
-                            rows={4}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
-                            placeholder="Plain text version..."
-                        />
-                    </div>
-                </div>
-
-                <div className="pt-4 flex justify-end gap-3">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={createMutation.isPending}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                    >
-                        {createMutation.isPending && <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />}
-                        Save Template
-                    </button>
-                </div>
-            </form>
-        </div>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
     );
 }

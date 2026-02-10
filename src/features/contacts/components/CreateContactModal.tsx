@@ -1,8 +1,50 @@
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { contactService } from '../api/contactService';
 import type { CreateContactDTO } from '../types';
-import { X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { useEffect } from 'react';
+
+const contactSchema = z.object({
+    first_name: z.string().min(1, "First name is required"),
+    last_name: z.string().min(1, "Last name is required"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().length(10, "Phone must be exactly 10 digits").regex(/^\d+$/, "Phone must contain only numbers"),
+
+    // Preferences (optional)
+    bhk_type: z.string().optional(),
+    furnishing_type: z.string().optional(),
+    location: z.string().optional(),
+    property_type: z.string().optional(),
+    power_backup_type: z.string().optional(),
+});
+
+type ContactForm = z.infer<typeof contactSchema>;
 
 interface CreateContactModalProps {
     isOpen: boolean;
@@ -11,35 +53,10 @@ interface CreateContactModalProps {
 
 export default function CreateContactModal({ isOpen, onClose }: CreateContactModalProps) {
     const queryClient = useQueryClient();
-    const [formData, setFormData] = useState({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        // Preferences (optional)
-        bhk_type: '',
-        furnishing_type: '',
-        location: '',
-        property_type: '',
-        power_backup_type: '',
-    });
-    const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const createMutation = useMutation({
-        mutationFn: (data: CreateContactDTO) => contactService.createContact(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['contacts'] });
-            onClose();
-            resetForm();
-        },
-        onError: (error: any) => {
-            const errorMessage = error.response?.data?.error || 'Failed to create contact';
-            setErrors({ submit: errorMessage });
-        },
-    });
-
-    const resetForm = () => {
-        setFormData({
+    const form = useForm<ContactForm>({
+        resolver: zodResolver(contactSchema),
+        defaultValues: {
             first_name: '',
             last_name: '',
             email: '',
@@ -49,311 +66,279 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
             location: '',
             property_type: '',
             power_backup_type: '',
-        });
-        setErrors({});
-    };
-
-    const validateForm = () => {
-        const newErrors: Record<string, string> = {};
-
-        if (!formData.first_name.trim()) {
-            newErrors.first_name = 'First name is required';
         }
-        if (!formData.last_name.trim()) {
-            newErrors.last_name = 'Last name is required';
-        }
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'Invalid email format';
-        }
-        if (!formData.phone.trim()) {
-            newErrors.phone = 'Phone is required';
-        } else if (!/^\d{10}$/.test(formData.phone)) {
-            newErrors.phone = 'Phone must be exactly 10 digits';
-        }
+    });
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!validateForm()) {
-            return;
+    // Reset form when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            form.reset();
         }
+    }, [isOpen, form]);
 
+    const createMutation = useMutation({
+        mutationFn: (data: CreateContactDTO) => contactService.createContact(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['contacts'] });
+            onClose();
+        },
+        onError: (error: any) => {
+            const errorMessage = error.response?.data?.error || 'Failed to create contact';
+            form.setError('root', { message: errorMessage });
+        },
+    });
+
+    const onSubmit = (data: ContactForm) => {
         const dto: CreateContactDTO = {
             contact: {
-                first_name: formData.first_name,
-                last_name: formData.last_name,
-                email: formData.email,
-                phone: formData.phone,
+                first_name: data.first_name,
+                last_name: data.last_name,
+                email: data.email,
+                phone: data.phone,
             },
         };
 
         // Add preferences if any are filled
         const hasPreferences =
-            formData.bhk_type ||
-            formData.furnishing_type ||
-            formData.location ||
-            formData.property_type ||
-            formData.power_backup_type;
+            data.bhk_type ||
+            data.furnishing_type ||
+            data.location ||
+            data.property_type ||
+            data.power_backup_type;
 
         if (hasPreferences) {
             dto.preference = {
-                bhk_type: formData.bhk_type || undefined,
-                furnishing_type: formData.furnishing_type || undefined,
-                location: formData.location || undefined,
-                property_type: formData.property_type || undefined,
-                power_backup_type: formData.power_backup_type || undefined,
+                bhk_type: data.bhk_type || undefined,
+                furnishing_type: data.furnishing_type || undefined,
+                location: data.location || undefined,
+                property_type: data.property_type || undefined,
+                power_backup_type: data.power_backup_type || undefined,
             };
         }
 
         createMutation.mutate(dto);
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        // Clear error for this field
-        if (errors[name]) {
-            setErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[name];
-                return newErrors;
-            });
-        }
-    };
-
-    if (!isOpen) return null;
-
     return (
-        <div
-            className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`}
-        >
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h2 className="text-2xl font-bold text-gray-900">Create New Contact</h2>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                        <X className="h-6 w-6" />
-                    </button>
-                </div>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Create New Contact</DialogTitle>
+                </DialogHeader>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    {/* Error Message */}
-                    {errors.submit && (
-                        <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-                            <p className="text-sm text-red-600">{errors.submit}</p>
-                        </div>
-                    )}
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        {form.formState.errors.root && (
+                            <div className="p-3 rounded-md bg-destructive/15 text-destructive text-sm">
+                                {form.formState.errors.root.message}
+                            </div>
+                        )}
 
-                    {/* Contact Information */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
-                                    First Name <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    id="first_name"
+                        {/* Contact Information */}
+                        <div>
+                            <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
                                     name="first_name"
-                                    value={formData.first_name}
-                                    onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${errors.first_name ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                                {errors.first_name && (
-                                    <p className="mt-1 text-sm text-red-500">{errors.first_name}</p>
-                                )}
-                            </div>
 
-                            <div>
-                                <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Last Name <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    id="last_name"
+                                <FormField
+                                    control={form.control}
                                     name="last_name"
-                                    value={formData.last_name}
-                                    onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${errors.last_name ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                                {errors.last_name && (
-                                    <p className="mt-1 text-sm text-red-500">{errors.last_name}</p>
-                                )}
-                            </div>
 
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Email <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="email"
-                                    id="email"
+                                <FormField
+                                    control={form.control}
                                     name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${errors.email ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
+                                            <FormControl>
+                                                <Input type="email" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                                {errors.email && (
-                                    <p className="mt-1 text-sm text-red-500">{errors.email}</p>
-                                )}
-                            </div>
 
-                            <div>
-                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Phone (10 digits) <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="tel"
-                                    id="phone"
+                                <FormField
+                                    control={form.control}
                                     name="phone"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    maxLength={10}
-                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 ${errors.phone ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Phone (10 digits) <span className="text-destructive">*</span></FormLabel>
+                                            <FormControl>
+                                                <Input {...field} maxLength={10} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                                {errors.phone && (
-                                    <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
-                                )}
                             </div>
                         </div>
-                    </div>
 
-                    {/* Preferences (Optional) */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Preferences (Optional)</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="bhk_type" className="block text-sm font-medium text-gray-700 mb-1">
-                                    BHK Type
-                                </label>
-                                <select
-                                    id="bhk_type"
+                        {/* Preferences */}
+                        <div>
+                            <h3 className="text-lg font-semibold mb-4">Preferences (Optional)</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
                                     name="bhk_type"
-                                    value={formData.bhk_type}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                                >
-                                    <option value="">Select BHK Type</option>
-                                    <option value="1BHK">1 BHK</option>
-                                    <option value="2BHK">2 BHK</option>
-                                    <option value="3BHK">3 BHK</option>
-                                    <option value="4BHK">4 BHK</option>
-                                    <option value="5BHK+">5 BHK+</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label htmlFor="furnishing_type" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Furnishing Type
-                                </label>
-                                <select
-                                    id="furnishing_type"
-                                    name="furnishing_type"
-                                    value={formData.furnishing_type}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                                >
-                                    <option value="">Select Furnishing</option>
-                                    <option value="Unfurnished">Unfurnished</option>
-                                    <option value="Semi-Furnished">Semi-Furnished</option>
-                                    <option value="Fully Furnished">Fully Furnished</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Location
-                                </label>
-                                <input
-                                    type="text"
-                                    id="location"
-                                    name="location"
-                                    value={formData.location}
-                                    onChange={handleChange}
-                                    placeholder="e.g., Mumbai"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>BHK Type</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select BHK Type" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="1BHK">1 BHK</SelectItem>
+                                                    <SelectItem value="2BHK">2 BHK</SelectItem>
+                                                    <SelectItem value="3BHK">3 BHK</SelectItem>
+                                                    <SelectItem value="4BHK">4 BHK</SelectItem>
+                                                    <SelectItem value="5BHK+">5 BHK+</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                            </div>
 
-                            <div>
-                                <label htmlFor="property_type" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Property Type
-                                </label>
-                                <select
-                                    id="property_type"
+                                <FormField
+                                    control={form.control}
+                                    name="furnishing_type"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Furnishing Type</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select Furnishing" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="Unfurnished">Unfurnished</SelectItem>
+                                                    <SelectItem value="Semi-Furnished">Semi-Furnished</SelectItem>
+                                                    <SelectItem value="Fully Furnished">Fully Furnished</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="location"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Location</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="e.g., Mumbai" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
                                     name="property_type"
-                                    value={formData.property_type}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                                >
-                                    <option value="">Select Property Type</option>
-                                    <option value="Apartment">Apartment</option>
-                                    <option value="Villa">Villa</option>
-                                    <option value="Independent House">Independent House</option>
-                                    <option value="Plot/Land">Plot/Land</option>
-                                    <option value="Penthouse">Penthouse</option>
-                                    <option value="Studio Apartment">Studio Apartment</option>
-                                </select>
-                            </div>
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Property Type</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select Property Type" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="Apartment">Apartment</SelectItem>
+                                                    <SelectItem value="Villa">Villa</SelectItem>
+                                                    <SelectItem value="Independent House">Independent House</SelectItem>
+                                                    <SelectItem value="Plot/Land">Plot/Land</SelectItem>
+                                                    <SelectItem value="Penthouse">Penthouse</SelectItem>
+                                                    <SelectItem value="Studio Apartment">Studio Apartment</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                            <div className="col-span-2">
-                                <label htmlFor="power_backup_type" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Power Backup Type
-                                </label>
-                                <select
-                                    id="power_backup_type"
-                                    name="power_backup_type"
-                                    value={formData.power_backup_type}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-                                >
-                                    <option value="">Select Power Backup</option>
-                                    <option value="No Backup">No Backup</option>
-                                    <option value="Partial Backup">Partial Backup</option>
-                                    <option value="Full Backup">Full Backup</option>
-                                    <option value="Generator">Generator</option>
-                                    <option value="Solar">Solar</option>
-                                </select>
+                                <div className="col-span-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="power_backup_type"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Power Backup Type</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select Power Backup" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="No Backup">No Backup</SelectItem>
+                                                        <SelectItem value="Partial Backup">Partial Backup</SelectItem>
+                                                        <SelectItem value="Full Backup">Full Backup</SelectItem>
+                                                        <SelectItem value="Generator">Generator</SelectItem>
+                                                        <SelectItem value="Solar">Solar</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={createMutation.isPending}
-                            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            {createMutation.isPending ? 'Creating...' : 'Create Contact'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                        {/* Actions */}
+                        <div className="flex justify-end gap-3 pt-4 border-t">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={onClose}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={createMutation.isPending}
+                            >
+                                {createMutation.isPending && (
+                                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                                )}
+                                {createMutation.isPending ? 'Creating...' : 'Create Contact'}
+                            </Button>
+                        </div>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
     );
 }

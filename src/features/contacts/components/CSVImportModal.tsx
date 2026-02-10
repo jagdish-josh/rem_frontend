@@ -1,7 +1,16 @@
 import { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { contactService } from '../api/contactService';
-import { X, Upload, FileText, Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, FileText, Download, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface CSVImportModalProps {
     isOpen: boolean;
@@ -133,41 +142,34 @@ export default function CSVImportModal({ isOpen, onClose }: CSVImportModalProps)
         onClose();
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h2 className="text-2xl font-bold text-gray-900">Import Contacts from CSV</h2>
-                    <button
-                        onClick={handleClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                        <X className="h-6 w-6" />
-                    </button>
-                </div>
+        <Dialog open={isOpen} onOpenChange={handleClose}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Import Contacts from CSV</DialogTitle>
+                    <DialogDescription>
+                        Upload a CSV file to bulk import contacts into your organization.
+                    </DialogDescription>
+                </DialogHeader>
 
-                {/* Content */}
-                <div className="p-6 space-y-6">
+                <div className="space-y-6 py-4">
                     {/* Instructions */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                        <h3 className="text-sm font-semibold text-blue-900 mb-2">CSV Format Requirements</h3>
-                        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                    <div className="bg-muted/50 rounded-lg p-4 text-sm">
+                        <h3 className="font-semibold mb-2">CSV Format Requirements</h3>
+                        <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                             <li>File must be in CSV format (.csv)</li>
                             <li>Maximum file size: 10MB</li>
-                            <li>Required columns: first_name, last_name, email, phone, bhk_type, furnishing_type, location, property_type, power_backup_type</li>
+                            <li>Required columns: first_name, last_name, email, phone</li>
                             <li>Phone must be exactly 10 digits</li>
-                            <li>Email must be unique within your organization</li>
                         </ul>
-                        <button
+                        <Button
+                            variant="link"
+                            className="h-auto p-0 mt-3 text-primary"
                             onClick={handleDownloadTemplate}
-                            className="mt-3 flex items-center text-sm font-medium text-blue-700 hover:text-blue-800 transition-colors"
                         >
-                            <Download className="h-4 w-4 mr-1" />
+                            <Download className="h-4 w-4 mr-2" />
                             Download CSV Template
-                        </button>
+                        </Button>
                     </div>
 
                     {/* File Upload Area */}
@@ -176,10 +178,11 @@ export default function CSVImportModal({ isOpen, onClose }: CSVImportModalProps)
                         onDragLeave={handleDrag}
                         onDragOver={handleDrag}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-300 hover:border-gray-400'
+                        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${dragActive
+                            ? 'border-primary bg-primary/5'
+                            : 'border-muted-foreground/25 hover:border-primary/50'
                             }`}
+                        onClick={() => fileInputRef.current?.click()}
                     >
                         <input
                             ref={fileInputRef}
@@ -191,74 +194,77 @@ export default function CSVImportModal({ isOpen, onClose }: CSVImportModalProps)
 
                         {selectedFile ? (
                             <div className="space-y-3">
-                                <FileText className="h-12 w-12 text-green-500 mx-auto" />
+                                <FileText className="h-12 w-12 text-primary mx-auto" />
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-sm font-medium">{selectedFile.name}</p>
+                                    <p className="text-xs text-muted-foreground">
                                         {(selectedFile.size / 1024).toFixed(2)} KB
                                     </p>
                                 </div>
-                                <button
-                                    onClick={() => setSelectedFile(null)}
-                                    className="text-sm text-red-600 hover:text-red-700 font-medium"
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedFile(null);
+                                    }}
                                 >
                                     Remove file
-                                </button>
+                                </Button>
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                <Upload className="h-12 w-12 text-gray-400 mx-auto" />
+                                <Upload className="h-12 w-12 text-muted-foreground mx-auto" />
                                 <div>
-                                    <button
-                                        type="button"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="text-blue-600 hover:text-blue-700 font-medium"
-                                    >
-                                        Click to upload
-                                    </button>
-                                    <span className="text-gray-600"> or drag and drop</span>
+                                    <p className="text-sm font-medium mb-1">
+                                        Click to upload or drag and drop
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        CSV files only (max 10MB)
+                                    </p>
                                 </div>
-                                <p className="text-xs text-gray-500">CSV files only (max 10MB)</p>
                             </div>
                         )}
                     </div>
 
-                    {/* Success Message */}
+                    {/* Alerts */}
                     {success && (
-                        <div className="flex items-start p-4 bg-green-50 border border-green-200 rounded-md">
-                            <CheckCircle className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-green-800">{success}</p>
-                        </div>
+                        <Alert className="bg-green-50 text-green-900 border-green-200">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <AlertTitle>Success</AlertTitle>
+                            <AlertDescription>{success}</AlertDescription>
+                        </Alert>
                     )}
 
                     {/* Error Message */}
                     {error && (
-                        <div className="flex items-start p-4 bg-red-50 border border-red-200 rounded-md">
-                            <AlertCircle className="h-5 w-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
-                            <p className="text-sm text-red-800">{error}</p>
-                        </div>
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Error</AlertTitle>
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
                     )}
                 </div>
 
-                {/* Actions */}
-                <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
-                    <button
-                        type="button"
+                <div className="flex justify-end gap-3">
+                    <Button
+                        variant="outline"
                         onClick={handleClose}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                     >
                         Close
-                    </button>
-                    <button
-                        type="button"
+                    </Button>
+                    <Button
                         onClick={handleUpload}
                         disabled={!selectedFile || importMutation.isPending}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
+                        {importMutation.isPending && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
                         {importMutation.isPending ? 'Uploading...' : 'Upload and Import'}
-                    </button>
+                    </Button>
                 </div>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }
