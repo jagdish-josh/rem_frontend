@@ -243,30 +243,38 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                 <label htmlFor="bhk_type" className="block text-sm font-medium text-gray-700 mb-1">
                                     BHK Type
                                 </label>
-                                <input
-                                    type="text"
+                                <select
                                     id="bhk_type"
                                     name="bhk_type"
                                     value={formData.bhk_type}
                                     onChange={handleChange}
-                                    placeholder="e.g., 2BHK, 3BHK"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                                />
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                                >
+                                    <option value="">Select BHK Type</option>
+                                    <option value="1BHK">1 BHK</option>
+                                    <option value="2BHK">2 BHK</option>
+                                    <option value="3BHK">3 BHK</option>
+                                    <option value="4BHK">4 BHK</option>
+                                    <option value="5BHK+">5 BHK+</option>
+                                </select>
                             </div>
 
                             <div>
                                 <label htmlFor="furnishing_type" className="block text-sm font-medium text-gray-700 mb-1">
                                     Furnishing Type
                                 </label>
-                                <input
-                                    type="text"
+                                <select
                                     id="furnishing_type"
                                     name="furnishing_type"
                                     value={formData.furnishing_type}
                                     onChange={handleChange}
-                                    placeholder="e.g., Fully Furnished"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                                />
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                                >
+                                    <option value="">Select Furnishing</option>
+                                    <option value="Unfurnished">Unfurnished</option>
+                                    <option value="Semi-Furnished">Semi-Furnished</option>
+                                    <option value="Fully Furnished">Fully Furnished</option>
+                                </select>
                             </div>
 
                             <div>
@@ -288,30 +296,41 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                 <label htmlFor="property_type" className="block text-sm font-medium text-gray-700 mb-1">
                                     Property Type
                                 </label>
-                                <input
-                                    type="text"
+                                <select
                                     id="property_type"
                                     name="property_type"
                                     value={formData.property_type}
                                     onChange={handleChange}
-                                    placeholder="e.g., Apartment"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                                />
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                                >
+                                    <option value="">Select Property Type</option>
+                                    <option value="Apartment">Apartment</option>
+                                    <option value="Villa">Villa</option>
+                                    <option value="Independent House">Independent House</option>
+                                    <option value="Plot/Land">Plot/Land</option>
+                                    <option value="Penthouse">Penthouse</option>
+                                    <option value="Studio Apartment">Studio Apartment</option>
+                                </select>
                             </div>
 
                             <div className="col-span-2">
                                 <label htmlFor="power_backup_type" className="block text-sm font-medium text-gray-700 mb-1">
                                     Power Backup Type
                                 </label>
-                                <input
-                                    type="text"
+                                <select
                                     id="power_backup_type"
                                     name="power_backup_type"
                                     value={formData.power_backup_type}
                                     onChange={handleChange}
-                                    placeholder="e.g., Full Backup"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                                />
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                                >
+                                    <option value="">Select Power Backup</option>
+                                    <option value="No Backup">No Backup</option>
+                                    <option value="Partial Backup">Partial Backup</option>
+                                    <option value="Full Backup">Full Backup</option>
+                                    <option value="Generator">Generator</option>
+                                    <option value="Solar">Solar</option>
+                                </select>
                             </div>
                         </div>
                     </div>

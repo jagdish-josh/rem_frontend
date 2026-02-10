@@ -11,8 +11,8 @@ export default function DashboardPage() {
     });
 
     const { data: contactsData, isLoading: loadingContacts } = useQuery({
-        queryKey: ['contacts', 'all'],
-        queryFn: contactService.getContacts,
+        queryKey: ['contacts', 'paginated', 1],
+        queryFn: () => contactService.getPaginatedContacts(1, 1), // Fetch only 1 contact to get total count
     });
 
     const { data: agentsData, isLoading: loadingAgents } = useQuery({
@@ -21,7 +21,7 @@ export default function DashboardPage() {
         enabled: user?.role === 'ORG_ADMIN', // Only fetch for ORG_ADMIN
     });
 
-    const totalContacts = contactsData?.length || 0;
+    const totalContacts = contactsData?.pagination?.total_count || 0;
     const totalAgents = agentsData?.length || 0;
     const activeCampaigns = 0; // Not implemented yet
     const isOrgAdmin = user?.role === 'ORG_ADMIN';

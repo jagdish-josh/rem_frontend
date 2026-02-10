@@ -3,7 +3,7 @@ import LoginPage from './features/auth/pages/LoginPage'
 import AdminLoginPage from './features/auth/pages/AdminLoginPage'
 import OrgLayout from './features/organization/components/OrgLayout'
 import DashboardPage from './features/organization/pages/DashboardPage'
-import OrgProfilePage from './features/organization/pages/OrgProfilePage'
+//import OrgProfilePage from './features/organization/pages/OrgProfilePage'
 import AgentsPage from './features/agents/pages/AgentsPage'
 import ContactsPage from './features/contacts/pages/ContactsPage'
 import CampaignsPage from './features/campaigns/pages/CampaignsPage'
@@ -22,11 +22,11 @@ function App() {
         {/* Protected Routes for Organization Members */}
         <Route path="/app" element={<OrgLayout />}>
           <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="organization" element={<OrgProfilePage />} />
           <Route path="agents" element={<AgentsPage />} />
           <Route path="contacts" element={<ContactsPage />} />
           <Route path="campaigns" element={<CampaignsPage />} />
-          <Route path="settings" element={<div>Settings Page</div>} />
+          {/* <Route path="organization" element={<OrgProfilePage />} /> */}
+          {/* <Route path="settings" element={<div>Settings Page</div>} /> */}
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
