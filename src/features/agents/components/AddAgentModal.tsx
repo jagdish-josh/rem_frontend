@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils'; // Assumed from context
 import { X, Loader2 } from 'lucide-react';
 
 const agentSchema = z.object({
-    full_name: z.string().min(2, "Name is required"),
-    email: z.string().email("Invalid email"),
+    full_name: z.string().min(2, "Name is required").max(30, "Name must be less than 100 characters").regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
+    email: z.string().email("Invalid email").max(30, "Email must be less than 100 characters"),
     phone: z.string().optional(),
 });
 

@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
 
 const orgSchema = z.object({
-    name: z.string().min(2, "Organization name is required"),
+    name: z.string().min(2, "Organization name is required").regex(/^[a-zA-Z0-9\s]+$/, "Organization name can only contain letters, numbers, and spaces").max(30, "Organization name must be less than 100 characters"),
     legalName: z.string().optional(),
     timezone: z.string(),
     phone: z.string().optional(),

@@ -9,7 +9,7 @@ import { X, Loader2 } from 'lucide-react';
 import type { Agent } from '../types';
 
 const editAgentSchema = z.object({
-    full_name: z.string().min(2, "Name is required"),
+    full_name: z.string().min(2, "Name is required").max(30, "Name must be less than 100 characters").regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
     phone: z.string().optional(),
 });
 

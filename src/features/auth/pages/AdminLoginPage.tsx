@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils';
 import { Loader2, Shield } from 'lucide-react';
 
 const loginSchema = z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    email: z.string().email('Invalid email address').max(30, "Email must be less than 100 characters"),
+    password: z.string().min(2, 'Invalid Credentials').max(100, "Password must be less than 100 characters"),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;

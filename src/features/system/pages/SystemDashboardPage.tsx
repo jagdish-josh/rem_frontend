@@ -127,9 +127,9 @@ export default function SystemDashboardPage() {
                                 <div>
                                     <span className="font-medium">ID:</span> {org.id}
                                 </div>
-                                <div className="text-right">
+                                {/* <div className="text-right">
                                     <span className="font-medium">Created:</span> {org.created_at ? new Date(org.created_at).toLocaleDateString() : 'N/A'}
-                                </div>
+                                </div> */}
                             </div>
 
                             {/* Action Buttons */}

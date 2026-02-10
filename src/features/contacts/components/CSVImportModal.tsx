@@ -136,7 +136,7 @@ export default function CSVImportModal({ isOpen, onClose }: CSVImportModalProps)
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -177,8 +177,8 @@ export default function CSVImportModal({ isOpen, onClose }: CSVImportModalProps)
                         onDragOver={handleDrag}
                         onDrop={handleDrop}
                         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-300 hover:border-gray-400'
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-300 hover:border-gray-400'
                             }`}
                     >
                         <input
