@@ -1,7 +1,15 @@
 import api from '@/lib/api';
-import type { Contact, CreateContactDTO, PaginatedContactsResponse, CSVImportResponse } from '../types';
+import type { Contact, CreateContactDTO, PaginatedContactsResponse, CSVImportResponse, PreferenceReferenceData } from '../types';
 
 export const contactService = {
+    /**
+     * Fetch preference reference data
+     */
+    getPreferences: async (): Promise<PreferenceReferenceData> => {
+        const response = await api.get('/preferences');
+        return response.data;
+    },
+
     /**
      * Fetch all contacts for the current organization
      */
@@ -13,9 +21,13 @@ export const contactService = {
     /**
      * Fetch paginated contacts
      */
-    getPaginatedContacts: async (page: number = 1, perPage: number = 5): Promise<PaginatedContactsResponse> => {
-        const response = await api.get('/contacts/paginated', {
-            params: { page, per_page: perPage }
+    getPaginatedContacts: async (page: number = 1, perPage: number = 25, filters?: any): Promise<PaginatedContactsResponse> => {
+        const response = await api.get('/contacts', {
+            params: {
+                page,
+                per_page: perPage,
+                ...filters
+            }
         });
         return response.data;
     },
