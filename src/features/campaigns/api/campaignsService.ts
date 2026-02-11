@@ -25,5 +25,10 @@ export const campaignsService = {
     createEmailType: async (data: { key: string; description?: string }): Promise<EmailType> => {
         const response = await api.post('/email_types', { email_type: data });
         return response.data;
+    },
+
+    createInstantCampaign: async (payload: { emails: string[], email_template_id: number }): Promise<{ message: string }> => {
+        const response = await api.post('/create/campaign', payload);
+        return response.data;
     }
 };
