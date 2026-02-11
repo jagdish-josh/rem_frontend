@@ -8,6 +8,7 @@ import { agentsService } from '../api/agentsService';
 import { Plus } from 'lucide-react';
 import type { Agent } from '../types';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function AgentsPage() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -26,9 +27,11 @@ export default function AgentsPage() {
         mutationFn: (id: string) => agentsService.deleteAgent(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['agents'] });
+            toast.success('Agent deleted successfully');
         },
         onError: (error: any) => {
-            alert(error.response?.data?.error || 'Failed to delete agent');
+            const message = error.response?.data?.error || 'Failed to delete agent';
+            toast.error(message);
         }
     });
 

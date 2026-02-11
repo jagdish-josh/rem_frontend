@@ -16,6 +16,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
 
 export default function SystemDashboardPage() {
     const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
@@ -33,9 +34,11 @@ export default function SystemDashboardPage() {
         mutationFn: (id: string) => systemService.deleteOrgAdmin(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['organizations'] });
+            toast.success('Admin deleted successfully');
         },
         onError: (error: any) => {
-            alert(error.response?.data?.error || 'Failed to delete admin');
+            const message = error.response?.data?.error || 'Failed to delete admin';
+            toast.error(message);
         }
     });
 
