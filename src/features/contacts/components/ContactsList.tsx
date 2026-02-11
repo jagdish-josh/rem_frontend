@@ -23,7 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+
 
 export default function ContactsList() {
     const [page, setPage] = useState(1);
@@ -44,7 +44,7 @@ export default function ContactsList() {
     // Selection state
     const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
 
-    const { data, isLoading, error } = useQuery({
+    const { data, isLoading } = useQuery({
         queryKey: ['contacts', 'paginated', page, perPage, filters],
         queryFn: () => contactService.getPaginatedContacts(page, perPage, filters),
     });

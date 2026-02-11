@@ -2,9 +2,11 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { contactService } from '../api/contactService';
-import type { CreateContactDTO } from '../types';
+import { campaignsService } from '../api/campaignsService';
+import { contactService } from '@/features/contacts/api/contactService';
+import type { CreateAudienceDTO, Audience } from '../types';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
     Dialog,
     DialogContent,
@@ -30,13 +32,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useEffect } from 'react';
 
-const contactSchema = z.object({
-    first_name: z.string().min(1, "First name is required"),
-    last_name: z.string().min(1, "Last name is required"),
-    email: z.string().email("Invalid email address"),
-    phone: z.string().length(10, "Phone must be exactly 10 digits").regex(/^\d+$/, "Phone must contain only numbers"),
-
-    // Preferences (optional)
+const audienceSchema = z.object({
+    name: z.string().min(1, "Audience name is required"),
     bhk_type: z.string().optional(),
     furnishing_type: z.string().optional(),
     location: z.string().optional(),
@@ -44,15 +41,17 @@ const contactSchema = z.object({
     power_backup_type: z.string().optional(),
 });
 
-type ContactForm = z.infer<typeof contactSchema>;
+type AudienceForm = z.infer<typeof audienceSchema>;
 
-interface CreateContactModalProps {
+interface CreateUpdateAudienceModalProps {
     isOpen: boolean;
     onClose: () => void;
+    audience?: Audience | null;
 }
 
-export default function CreateContactModal({ isOpen, onClose }: CreateContactModalProps) {
+export default function CreateUpdateAudienceModal({ isOpen, onClose, audience }: CreateUpdateAudienceModalProps) {
     const queryClient = useQueryClient();
+    const isEditMode = !!audience;
 
     // Fetch preferences
     const { data: preferences, isLoading: isLoadingPreferences } = useQuery({
@@ -61,13 +60,10 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
-    const form = useForm<ContactForm>({
-        resolver: zodResolver(contactSchema),
+    const form = useForm<AudienceForm>({
+        resolver: zodResolver(audienceSchema),
         defaultValues: {
-            first_name: '',
-            last_name: '',
-            email: '',
-            phone: '',
+            name: '',
             bhk_type: '',
             furnishing_type: '',
             location: '',
@@ -76,61 +72,97 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
         }
     });
 
-    // Reset form when modal opens
+    // Reset form when modal opens or audience changes
     useEffect(() => {
         if (isOpen) {
-            form.reset();
+            if (audience) {
+                // Find preference names from IDs for editing
+                const bhkType = preferences?.bhk_types?.find(t => t.id === audience.bhk_type_id)?.name || '';
+                const furnishingType = preferences?.furnishing_types?.find(t => t.id === audience.furnishing_type_id)?.name || '';
+                const location = preferences?.locations?.find(l => l.id === audience.location_id)?.city || '';
+                const propertyType = preferences?.property_types?.find(t => t.id === audience.property_type_id)?.name || '';
+                const powerBackupType = preferences?.power_backup_types?.find(t => t.id === audience.power_backup_type_id)?.name || '';
+
+                form.reset({
+                    name: audience.name,
+                    bhk_type: bhkType,
+                    furnishing_type: furnishingType,
+                    location: location,
+                    property_type: propertyType,
+                    power_backup_type: powerBackupType,
+                });
+            } else {
+                form.reset({
+                    name: '',
+                    bhk_type: '',
+                    furnishing_type: '',
+                    location: '',
+                    property_type: '',
+                    power_backup_type: '',
+                });
+            }
         }
-    }, [isOpen, form]);
+    }, [isOpen, audience, preferences, form]);
 
     const createMutation = useMutation({
-        mutationFn: (data: CreateContactDTO) => contactService.createContact(data),
+        mutationFn: (data: CreateAudienceDTO) => campaignsService.createAudience(data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['contacts'] });
+            queryClient.invalidateQueries({ queryKey: ['audiences'] });
+            toast.success('Audience created successfully');
             onClose();
         },
         onError: (error: any) => {
-            const errorMessage = error.response?.data?.error || 'Failed to create contact';
+            const errorMessage = error.response?.data?.errors?.join(', ') || 'Failed to create audience';
+            toast.error(errorMessage);
             form.setError('root', { message: errorMessage });
         },
     });
 
-    const onSubmit = (data: ContactForm) => {
-        const dto: CreateContactDTO = {
-            contact: {
-                first_name: data.first_name,
-                last_name: data.last_name,
-                email: data.email,
-                phone: data.phone,
-            },
+    const updateMutation = useMutation({
+        mutationFn: (data: CreateAudienceDTO) => campaignsService.updateAudience(audience!.id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['audiences'] });
+            toast.success('Audience updated successfully');
+            onClose();
+        },
+        onError: (error: any) => {
+            const errorMessage = error.response?.data?.errors?.join(', ') || 'Failed to update audience';
+            toast.error(errorMessage);
+            form.setError('root', { message: errorMessage });
+        },
+    });
+
+    const onSubmit = (data: AudienceForm) => {
+        // Convert selected names to IDs
+        const bhkTypeId = data.bhk_type ? preferences?.bhk_types?.find(t => t.name === data.bhk_type)?.id : null;
+        const furnishingTypeId = data.furnishing_type ? preferences?.furnishing_types?.find(t => t.name === data.furnishing_type)?.id : null;
+        const locationId = data.location ? preferences?.locations?.find(l => l.city === data.location)?.id : null;
+        const propertyTypeId = data.property_type ? preferences?.property_types?.find(t => t.name === data.property_type)?.id : null;
+        const powerBackupTypeId = data.power_backup_type ? preferences?.power_backup_types?.find(t => t.name === data.power_backup_type)?.id : null;
+
+        const dto: CreateAudienceDTO = {
+            name: data.name,
+            bhk_type_id: bhkTypeId || null,
+            furnishing_type_id: furnishingTypeId || null,
+            location_id: locationId || null,
+            property_type_id: propertyTypeId || null,
+            power_backup_type_id: powerBackupTypeId || null,
         };
 
-        // Add preferences if any are filled
-        const hasPreferences =
-            data.bhk_type ||
-            data.furnishing_type ||
-            data.location ||
-            data.property_type ||
-            data.power_backup_type;
-
-        if (hasPreferences) {
-            dto.preference = {
-                bhk_type: data.bhk_type || undefined,
-                furnishing_type: data.furnishing_type || undefined,
-                location: data.location || undefined,
-                property_type: data.property_type || undefined,
-                power_backup_type: data.power_backup_type || undefined,
-            };
+        if (isEditMode) {
+            updateMutation.mutate(dto);
+        } else {
+            createMutation.mutate(dto);
         }
-
-        createMutation.mutate(dto);
     };
+
+    const isPending = createMutation.isPending || updateMutation.isPending;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Create New Contact</DialogTitle>
+                    <DialogTitle>{isEditMode ? 'Edit Audience' : 'Create New Audience'}</DialogTitle>
                 </DialogHeader>
 
                 <Form {...form}>
@@ -141,71 +173,24 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                             </div>
                         )}
 
-                        {/* Contact Information */}
+                        {/* Audience Name */}
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Audience Name <span className="text-destructive">*</span></FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., College students" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        {/* Preference Filters */}
                         <div>
-                            <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="first_name"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>First Name <span className="text-destructive">*</span></FormLabel>
-                                            <FormControl>
-                                                <Input {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="last_name"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Last Name <span className="text-destructive">*</span></FormLabel>
-                                            <FormControl>
-                                                <Input {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="email"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
-                                            <FormControl>
-                                                <Input type="email" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="phone"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Phone (10 digits) <span className="text-destructive">*</span></FormLabel>
-                                            <FormControl>
-                                                <Input {...field} maxLength={10} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Preferences */}
-                        <div>
-                            <h3 className="text-lg font-semibold mb-4">Preferences (Optional)</h3>
+                            <h3 className="text-lg font-semibold mb-4">Target Filters (Optional)</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
@@ -213,7 +198,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>BHK Type</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder={isLoadingPreferences ? "Loading..." : "Select BHK Type"} />
@@ -238,7 +223,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Furnishing Type</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder={isLoadingPreferences ? "Loading..." : "Select Furnishing"} />
@@ -263,7 +248,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Location</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder={isLoadingPreferences ? "Loading..." : "Select Location"} />
@@ -288,7 +273,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Property Type</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder={isLoadingPreferences ? "Loading..." : "Select Property Type"} />
@@ -314,7 +299,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Power Backup Type</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <Select onValueChange={field.onChange} value={field.value}>
                                                     <FormControl>
                                                         <SelectTrigger>
                                                             <SelectValue placeholder={isLoadingPreferences ? "Loading..." : "Select Power Backup"} />
@@ -347,12 +332,12 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={createMutation.isPending}
+                                disabled={isPending}
                             >
-                                {createMutation.isPending && (
+                                {isPending && (
                                     <Loader2 className="animate-spin mr-2 h-4 w-4" />
                                 )}
-                                {createMutation.isPending ? 'Creating...' : 'Create Contact'}
+                                {isPending ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Audience' : 'Create Audience')}
                             </Button>
                         </div>
                     </form>

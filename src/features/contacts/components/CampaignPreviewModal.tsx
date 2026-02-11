@@ -45,7 +45,7 @@ export default function CampaignPreviewModal({
     const sendMutation = useMutation({
         mutationFn: (data: { emails: string[], email_template_id: number }) =>
             campaignsService.createInstantCampaign(data),
-        onSuccess: (data) => {
+        onSuccess: () => {
             toast.success('Campaign sent successfully');
             if (onSuccess) onSuccess();
             onClose();
@@ -123,7 +123,7 @@ export default function CampaignPreviewModal({
                         ) : (
                             <Send className="mr-2 h-4 w-4" />
                         )}
-                        Send Campaign
+                        Send Email
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -31,3 +31,25 @@ export interface CreateEmailTemplateDTO {
     html_body?: string;
     text_body?: string;
 }
+
+export interface Audience {
+    id: number;
+    organization_id: number;
+    name: string;
+    bhk_type_id: number | null;
+    furnishing_type_id: number | null;
+    location_id: number | null;
+    property_type_id: number | null;
+    power_backup_type_id: number | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CreateAudienceDTO {
+    name: string;
+    bhk_type_id?: number | null;
+    furnishing_type_id?: number | null;
+    location_id?: number | null;
+    property_type_id?: number | null;
+    power_backup_type_id?: number | null;
+}

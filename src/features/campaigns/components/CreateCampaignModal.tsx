@@ -1,9 +1,10 @@
-import { useForm, type DefaultValues } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { campaignsService } from '../api/campaignsService';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
     Dialog,
     DialogContent,
@@ -21,7 +22,6 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
     SelectContent,
@@ -33,11 +33,8 @@ import { useEffect } from 'react';
 
 const campaignSchema = z.object({
     name: z.string().min(2, "Campaign name is required"),
-    description: z.string().optional(),
     email_template_id: z.string().min(1, "Email template is required"),
-    audience_ids: z.array(z.number()),
-    scheduled_at: z.string().optional(),
-    status: z.enum(['draft', 'scheduled', 'sent']),
+    audience_id: z.string().min(1, "Audience is required"),
 });
 
 type CampaignForm = z.infer<typeof campaignSchema>;
@@ -54,12 +51,9 @@ export default function CreateCampaignModal({ isOpen, onClose }: CreateCampaignM
         resolver: zodResolver(campaignSchema),
         defaultValues: {
             name: '',
-            description: '',
             email_template_id: '',
-            status: 'draft',
-            audience_ids: [],
-            scheduled_at: '',
-        } as DefaultValues<CampaignForm>
+            audience_id: '',
+        }
     });
 
     // Reset form when modal opens
@@ -67,15 +61,11 @@ export default function CreateCampaignModal({ isOpen, onClose }: CreateCampaignM
         if (isOpen) {
             form.reset({
                 name: '',
-                description: '',
                 email_template_id: '',
-                status: 'draft',
-                audience_ids: [], // TODO: Set default audience when available
-                scheduled_at: '',
+                audience_id: '',
             });
         }
     }, [isOpen, form]);
-
 
     // Fetch email templates
     const { data: templates, isLoading: loadingTemplates } = useQuery({
@@ -84,32 +74,32 @@ export default function CreateCampaignModal({ isOpen, onClose }: CreateCampaignM
         enabled: isOpen,
     });
 
+    // Fetch audiences
+    const { data: audiences, isLoading: loadingAudiences } = useQuery({
+        queryKey: ['audiences'],
+        queryFn: campaignsService.getAudiences,
+        enabled: isOpen,
+    });
+
     const createMutation = useMutation({
         mutationFn: (data: CampaignForm) => {
-            // Convert string ID back to number if API requires it
             const apiData = {
-                ...data,
-                email_template_id: Number(data.email_template_id)
+                name: data.name,
+                email_template_id: Number(data.email_template_id),
+                audience_id: Number(data.audience_id),
             };
 
-            // TODO: Uncomment when API is ready
-            // return campaignsService.createCampaign(apiData);
-
-            // For now, just simulate success
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    console.log('Campaign would be created with data:', apiData);
-                    resolve({ message: 'Campaign created successfully' });
-                }, 1000);
-            });
+            return campaignsService.createCampaign(apiData);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+            toast.success('Campaign created successfully and email sent!');
             form.reset();
             onClose();
         },
         onError: (error: any) => {
             const message = error.response?.data?.errors?.join(', ') || error.message || 'Failed to create campaign';
+            toast.error(message);
             form.setError('root', { message });
         }
     });
@@ -126,7 +116,7 @@ export default function CreateCampaignModal({ isOpen, onClose }: CreateCampaignM
 
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle>Create New Campaign</DialogTitle>
                 </DialogHeader>
@@ -155,24 +145,6 @@ export default function CreateCampaignModal({ isOpen, onClose }: CreateCampaignM
 
                         <FormField
                             control={form.control}
-                            name="description"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Description</FormLabel>
-                                    <FormControl>
-                                        <Textarea
-                                            placeholder="Brief description of the campaign..."
-                                            className="resize-none"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
                             name="email_template_id"
                             render={({ field }) => (
                                 <FormItem>
@@ -184,11 +156,11 @@ export default function CreateCampaignModal({ isOpen, onClose }: CreateCampaignM
                                     >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select a template..." />
+                                                <SelectValue placeholder={loadingTemplates ? "Loading..." : "Select a template..."} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {templates?.map(template => (
+                                            {templates?.map((template: any) => (
                                                 <SelectItem key={template.id} value={template.id.toString()}>
                                                     {template.name}
                                                 </SelectItem>
@@ -202,20 +174,26 @@ export default function CreateCampaignModal({ isOpen, onClose }: CreateCampaignM
 
                         <FormField
                             control={form.control}
-                            name="status"
+                            name="audience_id"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Status <span className="text-destructive">*</span></FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormLabel>Audience <span className="text-destructive">*</span></FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        value={field.value}
+                                        disabled={loadingAudiences}
+                                    >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select status" />
+                                                <SelectValue placeholder={loadingAudiences ? "Loading..." : "Select an audience..."} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="draft">Draft</SelectItem>
-                                            <SelectItem value="scheduled">Scheduled</SelectItem>
-                                            <SelectItem value="sent">Sent</SelectItem>
+                                            {audiences?.map((audience: any) => (
+                                                <SelectItem key={audience.id} value={audience.id.toString()}>
+                                                    {audience.name}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -223,36 +201,13 @@ export default function CreateCampaignModal({ isOpen, onClose }: CreateCampaignM
                             )}
                         />
 
-                        {form.watch('status') === 'scheduled' && (
-                            <FormField
-                                control={form.control}
-                                name="scheduled_at"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Scheduled At</FormLabel>
-                                        <FormControl>
-                                            <Input type="datetime-local" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        )}
-
-                        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                            <p className="text-sm text-blue-800">
-                                <strong>Note:</strong> Audience selection will be available once the audiences/segments API is implemented.
-                                For now, campaigns will target all contacts in your organization.
-                            </p>
-                        </div>
-
                         <DialogFooter>
                             <Button type="button" variant="secondary" onClick={onClose} disabled={createMutation.isPending}>
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={createMutation.isPending}>
                                 {createMutation.isPending && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
-                                Create Campaign
+                                Send Email
                             </Button>
                         </DialogFooter>
                     </form>

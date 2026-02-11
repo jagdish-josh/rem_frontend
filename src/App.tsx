@@ -10,6 +10,7 @@ import CampaignsPage from './features/campaigns/pages/CampaignsPage'
 import SystemLayout from './features/system/components/SystemLayout'
 import SystemDashboardPage from './features/system/pages/SystemDashboardPage'
 import NotFoundPage from './components/NotFoundPage'
+import { Toaster } from './components/ui/sonner'
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         {/* Fallback for any other URL */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      <Toaster />
     </div>
   )
 }
