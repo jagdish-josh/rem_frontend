@@ -36,7 +36,7 @@ export default function AgentsPage() {
     });
 
     const handleDelete = (agent: Agent) => {
-        if (confirm(`Are you sure you want to delete ${agent.full_name}?`)) {
+        if (confirm(`Are you sure you want to delete ${agent.name}?`)) {
             deleteMutation.mutate(agent.id);
         }
     };

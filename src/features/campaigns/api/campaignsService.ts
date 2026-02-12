@@ -33,7 +33,7 @@ export const campaignsService = {
     },
 
     createCampaign: async (payload: { name: string, email_template_id: number, audience_id: number }): Promise<{ message: string }> => {
-        const response = await api.post('/create/campaign', payload);
+        const response = await api.post('/campaigns', payload);
         return response.data;
     },
 
