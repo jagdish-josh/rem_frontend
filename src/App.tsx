@@ -28,7 +28,7 @@ function App() {
           <Route path="campaigns" element={<CampaignsPage />} />
           {/* <Route path="organization" element={<OrgProfilePage />} /> */}
           {/* <Route path="settings" element={<div>Settings Page</div>} /> */}
-          <Route path="*" element={<NotFoundPage />} />
+          {/* <Route path="*" element={<NotFoundPage />} /> */}
         </Route>
 
         {/* Protected Routes for System Admins */}

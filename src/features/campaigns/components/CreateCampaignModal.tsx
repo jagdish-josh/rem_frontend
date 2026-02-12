@@ -35,6 +35,7 @@ const campaignSchema = z.object({
     name: z.string().min(2, "Campaign name is required"),
     email_template_id: z.string().min(1, "Email template is required"),
     audience_id: z.string().min(1, "Audience is required"),
+    scheduled_at: z.string().min(1, "Scheduled at is required"),
 });
 
 type CampaignForm = z.infer<typeof campaignSchema>;
@@ -53,6 +54,7 @@ export default function CreateCampaignModal({ isOpen, onClose }: CreateCampaignM
             name: '',
             email_template_id: '',
             audience_id: '',
+            scheduled_at: '',
         }
     });
 
@@ -196,6 +198,24 @@ export default function CreateCampaignModal({ isOpen, onClose }: CreateCampaignM
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="scheduled_at"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>
+                                        Schedule Time <span className="text-destructive">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="datetime-local"
+                                            {...field}
+                                        />
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}

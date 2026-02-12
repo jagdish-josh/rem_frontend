@@ -211,7 +211,7 @@ export default function ContactsList() {
                         onClick={() => setShowCampaignModal(true)}
                     >
                         <Send className="h-4 w-4 mr-2" />
-                        Send Campaign
+                        Send Email
                     </Button>
                 </div>
             </div>
